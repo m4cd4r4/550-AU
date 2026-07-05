@@ -1,0 +1,373 @@
+:root {
+  --bg: #04060a;
+  --panel: rgba(8, 12, 18, 0.82);
+  --border: #1b2430;
+  --text-dim: #7d8896;
+  --text: #c3ccd6;
+  --value: #f2f6fa;
+  --accent: #ffb000;
+  --accent-dim: rgba(255, 176, 0, 0.14);
+  --mono: ui-monospace, 'Cascadia Mono', 'JetBrains Mono', Consolas, 'Courier New', monospace;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  font-family: var(--mono);
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+#app,
+#app canvas {
+  position: fixed;
+  inset: 0;
+}
+
+.ui {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.ui button {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.ui button:hover {
+  border-color: var(--text-dim);
+  color: var(--value);
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(6px);
+}
+
+.topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 1px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+  pointer-events: auto;
+}
+
+.brand {
+  padding: 9px 14px;
+  border-right: 1px solid var(--border);
+  color: var(--value);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+}
+
+.brand .sub {
+  color: var(--text-dim);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  display: block;
+  margin-top: 1px;
+}
+
+.act-heading {
+  flex: 1;
+  padding: 9px 14px;
+  min-width: 0;
+}
+
+.act-heading .act-name {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+
+.act-heading .act-question {
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+  margin-top: 2px;
+}
+
+.mode-toggle {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  gap: 6px;
+}
+
+.mode-toggle button {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  padding: 6px 14px;
+}
+
+.mode-toggle button.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.chapter-rail {
+  position: absolute;
+  left: 0;
+  top: 54px;
+  bottom: 0;
+  width: 168px;
+  padding: 12px 0;
+  border-right: 1px solid var(--border);
+  background: var(--panel);
+  pointer-events: auto;
+  overflow-y: auto;
+}
+
+.chapter-rail .chapter {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-left: 2px solid transparent;
+  padding: 8px 12px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+}
+
+.chapter-rail .chapter .num {
+  color: var(--text-dim);
+  margin-right: 8px;
+}
+
+.chapter-rail .chapter.active {
+  border-left-color: var(--accent);
+  color: var(--value);
+  background: var(--accent-dim);
+}
+
+.chapter-rail .chapter.locked {
+  opacity: 0.42;
+  cursor: default;
+}
+
+.chapter-rail .chapter .tag {
+  float: right;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  padding: 1px 4px;
+}
+
+.hud {
+  position: absolute;
+  top: 66px;
+  right: 12px;
+  min-width: 250px;
+  padding: 10px 12px;
+  pointer-events: auto;
+}
+
+.hud .row {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 2.5px 0;
+  font-size: 11px;
+}
+
+.hud .row .k {
+  color: var(--text-dim);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  padding-top: 2px;
+}
+
+.hud .row .v {
+  color: var(--value);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.captions {
+  position: absolute;
+  bottom: 92px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 620px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--value);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.9);
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+  letter-spacing: 0.03em;
+}
+
+.captions.visible {
+  opacity: 1;
+}
+
+.scale-ribbon {
+  position: absolute;
+  left: 180px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 12px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  pointer-events: auto;
+}
+
+.scale-ribbon .mode {
+  color: var(--accent);
+}
+
+.scale-ribbon .fact {
+  color: var(--text-dim);
+}
+
+.scale-ribbon .fact b {
+  color: var(--value);
+  font-weight: normal;
+}
+
+.scale-ribbon button {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  padding: 4px 10px;
+}
+
+.scale-ribbon button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.time-controls {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  pointer-events: auto;
+}
+
+.time-controls button {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  padding: 5px 12px;
+  min-width: 58px;
+}
+
+.time-controls input[type='range'] {
+  width: 220px;
+  accent-color: var(--accent);
+  pointer-events: auto;
+}
+
+.labels {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.labels .label {
+  position: absolute;
+  transform: translate(10px, -50%);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95);
+  white-space: nowrap;
+}
+
+.labels .label.accent {
+  color: var(--accent);
+  font-size: 10px;
+}
+
+.inspector {
+  position: absolute;
+  right: 12px;
+  bottom: 64px;
+  width: 250px;
+  padding: 10px 12px;
+  display: none;
+  pointer-events: auto;
+}
+
+.inspector.visible {
+  display: block;
+}
+
+.inspector .title {
+  color: var(--accent);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  margin-bottom: 6px;
+}
+
+.inspector .row {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  font-size: 10px;
+  padding: 2px 0;
+}
+
+.inspector .row .k {
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+}
+
+.inspector .row .v {
+  color: var(--value);
+  text-align: right;
+}
+
+.inspector .close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  border: none;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+@media (max-width: 900px) {
+  .chapter-rail {
+    display: none;
+  }
+  .scale-ribbon {
+    left: 12px;
+  }
+  .hud {
+    min-width: 0;
+  }
+}
