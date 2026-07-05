@@ -1,0 +1,59 @@
+{
+  "targets": [
+    {
+      "id": "proxima-b",
+      "rank": 1,
+      "name": "Proxima Centauri b",
+      "star": "Proxima Centauri",
+      "distanceLy": 4.24,
+      "raDeg": 217.42896,
+      "decDeg": -62.6795,
+      "modelledDiameterKm": 13000,
+      "modelledDiameterNote": "Modelled as 1.02 Earth diameters, consistent with the mission's 32 km and 57 km image-cylinder figures",
+      "blurb": "Closest potentially habitable world; best achievable resolution",
+      "shortlisted": false
+    },
+    {
+      "id": "trappist-1",
+      "rank": 2,
+      "name": "TRAPPIST-1 system",
+      "star": "TRAPPIST-1",
+      "distanceLy": 40.7,
+      "raDeg": 346.622,
+      "decDeg": -5.04125,
+      "blurb": "Three rocky planets in or near the habitable zone from one focal line",
+      "shortlisted": false
+    },
+    {
+      "id": "gj-273b",
+      "rank": 3,
+      "name": "GJ 273b",
+      "star": "Luyten's Star",
+      "distanceLy": 12.4,
+      "raDeg": 111.85208,
+      "decDeg": 5.22578,
+      "blurb": "Super-Earth around a quiet red dwarf",
+      "shortlisted": false
+    },
+    {
+      "id": "kepler-186f",
+      "name": "Kepler-186f",
+      "star": "Kepler-186",
+      "distanceLy": 579,
+      "raDeg": 298.65271,
+      "decDeg": 43.955,
+      "blurb": "Earth-sized planet at the cool edge of its habitable zone",
+      "shortlisted": true
+    },
+    {
+      "id": "lhs-1140b",
+      "name": "LHS 1140 b",
+      "star": "LHS 1140",
+      "distanceLy": 48.9,
+      "raDeg": 11.2471,
+      "decDeg": -15.2717,
+      "blurb": "Dense rocky super-Earth, a prime atmosphere target",
+      "shortlisted": true
+    }
+  ]
+}
