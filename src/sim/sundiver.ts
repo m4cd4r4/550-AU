@@ -23,12 +23,14 @@ export interface SundiverParams {
   endAU: number; // stop integrating past this heliocentric distance
 }
 
+// endAU covers the oldest pearl at the end of Act 4's 30 year programme
+// clock, so the string never bunches against the integration boundary.
 export const SUNDIVER_DEFAULTS: SundiverParams = {
   startAU: 1,
   perihelionAU: 0.1,
   beta: 0.9475,
   jettisonS: 2 * YEAR_S,
-  endAU: 700
+  endAU: 850
 };
 
 export interface TrajectorySample {
