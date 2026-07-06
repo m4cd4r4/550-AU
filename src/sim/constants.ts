@@ -13,3 +13,7 @@ export const YEAR_S = 365.25 * DAY_S; // Julian year, s
 
 // 4GM/c^2: the length scale of solar lensing (~5.9 km)
 export const FOUR_GM_OVER_C2 = (4 * G * M_SUN) / (C * C);
+
+// Solar quadrupole moment (oblateness). At true strength the caustic is
+// micro-arcsecond scale; the spike page exaggerates it for visibility and says so.
+export const SUN_J2 = 2.25e-7;
