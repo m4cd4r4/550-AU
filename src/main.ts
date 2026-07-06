@@ -2,6 +2,7 @@ import { ACESFilmicToneMapping, PerspectiveCamera, Scene, WebGLRenderer } from '
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Act2FocalLine } from './acts/act2-focal-line';
 import { Act3Sundiver } from './acts/act3-sundiver';
+import { Act4Pearls } from './acts/act4-pearls';
 import type { Act, ActMode, ActServices } from './acts/act';
 import { createComposer } from './render/bloom';
 import { OriginFrame } from './render/floating-origin';
@@ -22,7 +23,7 @@ const CHAPTERS = [
   { id: 1, title: "EINSTEIN'S LENS", available: false },
   { id: 2, title: 'THE FOCAL LINE', available: true },
   { id: 3, title: 'THE SUNDIVER', available: true },
-  { id: 4, title: 'STRING OF PEARLS', available: false },
+  { id: 4, title: 'STRING OF PEARLS', available: true },
   { id: 5, title: 'IMAGING THE RING', available: false },
   { id: 6, title: 'MANY WORLDS', available: false },
   { id: 7, title: 'EPILOGUE', available: false }
@@ -136,7 +137,8 @@ const services: ActServices = {
 
 const actFactories = new Map<number, (s: ActServices) => Act>([
   [2, (s) => new Act2FocalLine(s)],
-  [3, (s) => new Act3Sundiver(s)]
+  [3, (s) => new Act3Sundiver(s)],
+  [4, (s) => new Act4Pearls(s)]
 ]);
 const actCache = new Map<number, Act>();
 

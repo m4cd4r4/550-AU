@@ -26,3 +26,13 @@ export function eclipticToScene(v: Vec3d): Vec3d {
   v.z = -y;
   return v;
 }
+
+// Unit direction of a target's focal line in scene axes: directly opposite
+// the target on the far side of the Sun.
+export function focalLineDirScene(raDeg: number, decDeg: number): Vec3d {
+  const dir = eclipticToScene(equatorialToEclipticDir(raDeg, decDeg));
+  dir.x = -dir.x;
+  dir.y = -dir.y;
+  dir.z = -dir.z;
+  return dir;
+}
