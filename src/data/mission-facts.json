@@ -49,6 +49,10 @@
     "reaches650AUYear": 20,
     "imagingOperationsYears": 10
   },
+  "sundiverModel": {
+    "tunedLightnessBeta": 0.9475,
+    "note": "Effective sail lightness number, tuned so the integrator reproduces the published 25-26 AU/yr exit from a 0.1 AU perihelion. Not derived from sail mass and area; see the clarification appended to docs/BUILD-PROMPT.md."
+  },
   "voyager1": {
     "speedAUYr": 3.6,
     "distanceAU": 169,

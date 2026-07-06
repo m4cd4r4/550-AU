@@ -127,3 +127,9 @@ Follow the six slices in `docs/SIM-PLAN.md` section 10. After each slice:
 Definition of done: Acts 0-7 complete in Tour and Explore modes, physics tests green, honest-scale system working with at least one true-scale toggle, ambient audio with mute, credits overlay present, 45+ fps everywhere, LICENSE + CREDITS.md in place, README with screenshots, run instructions, and a physics-model appendix documenting the equations and which visuals are dramatized. Pages deploy prepared but awaiting Macdara's go.
 
 Before writing any code: enter plan mode, read `docs/SIM-PLAN.md`, present your implementation plan (including the Act 5 shader spike), and confirm.
+
+---
+
+## Clarifications (appended during the build; the sections above are unchanged)
+
+**2026-07-06, slice 3 (sundiver anchors).** The three sundiver timeline figures in sections 2 and 3 are mutually inconsistent as strict physics: a craft with hyperbolic excess 25-26 AU/yr covers 650 AU in ~24-25 years, not 19-21 (that pace needs ~32.5 AU/yr average, and speed only falls after perihelion). The figures reconcile if "reaches 650 AU ~year 20" is read as reaching the ~550 AU minimum focus: at 26 AU/yr the 547.8 AU crossing lands at year ~21, and the "passes Voyager 1 ~year 7" figure checks out exactly (169 AU / 25 AU/yr average). The integrator therefore anchors its tests to: perihelion ~0.1 AU, exit 25-26 AU/yr, minimum focus (547.8 AU) in 19-22 yr, 650 AU in 23-27 yr, Voyager pass at year 6-8. The published figures stay in `mission-facts.json` as quoted claims. Separately, the sail lightness number needed for that exit speed from a 0.1 AU perihelion is beta ~0.95, well above what 100 kg / 16,000 m^2 gives physically (~0.25); per section 3 the sail loading is an effective tuned parameter, recorded as `sundiverModel.tunedLightnessBeta` in the facts file and labelled tuned in-app.
