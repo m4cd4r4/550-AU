@@ -1,0 +1,234 @@
+// Act 0 - The Problem. Why can't JWST do this? A procedural JWST beside the
+// ghosted outline of the roughly 90 km aperture the same image would need
+// by brute force, plus the contrast inset: a planet is about 1e10 times
+// fainter than its star, and a coronagraph only buys about 1e6 of that.
+// The aperture ring is drawn to the same scale as JWST and dwarfs the frame;
+// that is the point, and the scale is stated.
+
+import {
+  BufferAttribute,
+  BufferGeometry,
+  Group,
+  Line,
+  LineBasicMaterial,
+  Mesh,
+  MeshBasicMaterial,
+  RingGeometry,
+  SphereGeometry
+} from 'three';
+import facts from '../data/mission-facts.json';
+import { vec3d } from '../sim/vec3d';
+import type { LabelAnchor } from '../render/focal-ruler';
+import type { Act, ActMode, ActServices } from './act';
+
+// JWST primary is 6.5 m; the aperture the lens replaces is ~90 km. Draw both
+// to one scene scale: 1 scene unit = the JWST mirror, so the ring radius is
+// (90 km / 6.5 m) / 2 ~ 6920 units. Camera pulls back to reveal it.
+const JWST_M = facts.problem.jwstApertureM;
+const APERTURE_KM = facts.problem.requiredApertureKm;
+const RING_RADIUS = ((APERTURE_KM * 1000) / JWST_M) / 2;
+const TOUR_DURATION_S = 60;
+
+export class Act0Problem implements Act {
+  readonly id = 0;
+  readonly title = 'THE PROBLEM';
+  readonly question = 'Why can JWST not do this?';
+
+  private readonly group = new Group();
+  private readonly jwst = new Group();
+  private readonly ring: Line;
+  private readonly inset: HTMLElement;
+  private readonly anchors: LabelAnchor[];
+  private mode: ActMode = 'tour';
+  private lastCaption = -1;
+  private endShown = false;
+
+  constructor(private readonly s: ActServices) {
+    this.buildJwst();
+    this.group.add(this.jwst);
+
+    // 90 km aperture as a ghosted ring, concentric with the JWST mirror.
+    const segments = 160;
+    const pts = new Float32Array((segments + 1) * 3);
+    for (let i = 0; i <= segments; i++) {
+      const a = (i / segments) * Math.PI * 2;
+      pts[i * 3] = Math.cos(a) * RING_RADIUS;
+      pts[i * 3 + 1] = Math.sin(a) * RING_RADIUS;
+      pts[i * 3 + 2] = 0;
+    }
+    const ringGeometry = new BufferGeometry();
+    ringGeometry.setAttribute('position', new BufferAttribute(pts, 3));
+    this.ring = new Line(
+      ringGeometry,
+      new LineBasicMaterial({ color: 0xffb000, transparent: true, opacity: 0.5 })
+    );
+    this.ring.frustumCulled = false;
+    this.group.add(this.ring);
+
+    this.anchors = [
+      { text: `JWST ${JWST_M} m`, displayPos: vec3d(2.5, 1.5, 0), accent: false },
+      { text: `APERTURE NEEDED ${APERTURE_KM} km`, displayPos: vec3d(0, RING_RADIUS * 1.02, 0), accent: true }
+    ];
+
+    this.inset = document.createElement('div');
+    this.inset.className = 'contrast-inset panel';
+    this.inset.innerHTML = `
+      <div class="chart-title">THE CONTRAST PROBLEM</div>
+      <div class="contrast-row"><span class="dot star"></span><span>Host star</span><b>brightness 1</b></div>
+      <div class="contrast-row"><span class="dot planet"></span><span>Planet</span><b>1e-10 as bright</b></div>
+      <div class="contrast-note">A coronagraph suppresses about 1e6 of the glare. The gravitational lens amplifies the planet about 1e11 instead.</div>`;
+  }
+
+  private buildJwst(): void {
+    const gold = new MeshBasicMaterial({ color: 0xd9a441 });
+    // 18-segment primary approximated as a hex ring of small spheres.
+    for (let i = 0; i < 18; i++) {
+      const a = (i / 18) * Math.PI * 2;
+      const r = 0.9 + (i % 2) * 0.1;
+      const seg = new Mesh(new SphereGeometry(0.16, 8, 6), gold);
+      seg.position.set(Math.cos(a) * r, Math.sin(a) * r, 0);
+      this.jwst.add(seg);
+    }
+    const hub = new Mesh(new SphereGeometry(0.4, 12, 10), gold);
+    this.jwst.add(hub);
+    // Sunshield as a thin skewed plate behind the mirror.
+    const shield = new Mesh(
+      new RingGeometry(0, 2.6, 4),
+      new MeshBasicMaterial({ color: 0x3a3f4a, transparent: true, opacity: 0.5 })
+    );
+    shield.position.z = -1.2;
+    shield.rotation.z = Math.PI / 4;
+    shield.scale.set(1.4, 1, 1);
+    this.jwst.add(shield);
+  }
+
+  enter(mode: ActMode): void {
+    this.s.scene.add(this.group);
+    this.s.origin.setOrigin(vec3d(0, 0, 0));
+    this.s.setActHeading(`ACT 0 / ${this.title}`, this.question);
+    this.s.timeline.reset();
+    this.s.timeline.setWarp(1);
+    this.lastCaption = -1;
+    this.endShown = false;
+    (this.s.hud.el.parentElement ?? document.body).appendChild(this.inset);
+    this.s.labels.setAnchors(this.anchors);
+    this.setMode(mode);
+  }
+
+  setMode(mode: ActMode): void {
+    this.mode = mode;
+    this.s.controls.enabled = mode === 'explore';
+    this.s.ribbon.setToggle(false, false);
+    this.s.inspector.hide();
+    if (mode === 'explore') {
+      this.s.timeline.pause();
+      this.s.controls.target.set(0, 0, 0);
+      this.s.camera.position.set(0, 0, RING_RADIUS * 1.4);
+    } else {
+      this.s.captions.clear();
+    }
+  }
+
+  private progress(): number {
+    return Math.min(1, this.s.timeline.seconds / TOUR_DURATION_S);
+  }
+
+  update(): void {
+    if (this.mode === 'tour') {
+      const p = this.progress();
+      this.placeTourCamera(p);
+      this.runCaptions(p);
+      if (p >= 1 && !this.endShown) {
+        this.endShown = true;
+        this.s.timeline.pause();
+      }
+    }
+    // Ring fades in as the camera pulls back to reveal its scale.
+    const camDist = this.s.camera.position.length();
+    (this.ring.material as LineBasicMaterial).opacity = Math.min(
+      0.5,
+      Math.max(0, (camDist - 6) / RING_RADIUS)
+    );
+    this.updateHud(camDist);
+  }
+
+  private placeTourCamera(p: number): void {
+    // Start on the JWST mirror, pull back through the 90 km ring.
+    const e = p * p * (3 - 2 * p);
+    const dist = 4 + e * RING_RADIUS * 1.35;
+    this.s.camera.position.set(Math.sin(p * 0.6) * dist * 0.15, dist * 0.12, dist);
+    this.s.camera.lookAt(0, 0, 0);
+  }
+
+  private runCaptions(p: number): void {
+    const beats = [
+      { at: 0.02, text: `JWST sees exoplanets as unresolved points. Its mirror is ${JWST_M} metres across.` },
+      { at: 0.4, text: `To resolve a planet's surface by aperture alone you would need a mirror about ${APERTURE_KM} km wide.` },
+      { at: 0.75, text: 'The Sun already is that lens. You just have to travel to its focus.' }
+    ];
+    for (let i = 0; i < beats.length; i++) {
+      const beat = beats[i];
+      if (beat && this.lastCaption < i && p >= beat.at) {
+        this.s.captions.show(beat.text, 7);
+        this.lastCaption = i;
+      }
+    }
+  }
+
+  private updateHud(camDist: number): void {
+    const shown = Math.min(APERTURE_KM, (camDist / RING_RADIUS) * APERTURE_KM * 0.75);
+    const rows: [string, string][] = [
+      ['JWST APERTURE', `${JWST_M} m`],
+      ['APERTURE FOR A MAP', `${APERTURE_KM} km`],
+      ['RATIO', `${Math.round((APERTURE_KM * 1000) / JWST_M).toLocaleString('en-GB')} to 1`],
+      ['STAR / PLANET CONTRAST', `${facts.problem.starPlanetContrastRatio.toExponential(0)}`],
+      ['CORONAGRAPH LIMIT', `${facts.problem.coronagraphContrastLimit.toExponential(0)}`],
+      ['LENS AMPLIFICATION', `${facts.lens.lightAmplificationVisible.toExponential(0)}`],
+      ['FIELD SPAN', `about ${shown.toFixed(0)} km`]
+    ];
+    this.s.hud.setRows(rows);
+    this.s.ribbon.set({ mapLabel: 'TRUE SCALE, JWST : 90 KM', compression: 1, trueDistanceAU: 1 });
+    this.s.timeControls.set({
+      paused: this.s.timeline.paused,
+      warpLabel: '1X',
+      progress: this.mode === 'tour' ? this.progress() : null
+    });
+  }
+
+  onPlayPause(): void {
+    if (this.mode !== 'tour') return;
+    if (this.s.timeline.paused) {
+      if (this.progress() >= 1) {
+        this.s.timeline.scrubTo(0);
+        this.lastCaption = -1;
+        this.endShown = false;
+        this.s.captions.clear();
+      }
+      this.s.timeline.resume();
+    } else {
+      this.s.timeline.pause();
+    }
+  }
+
+  onWarpCycle(): void {
+    // No warp in Act 0.
+  }
+
+  onScrub(progress: number): void {
+    this.s.timeline.scrubTo(progress * TOUR_DURATION_S);
+    this.lastCaption = 2;
+    this.endShown = progress >= 1;
+    this.s.captions.clear();
+  }
+
+  onToggleTrueScale(): void {
+    // Act 0 is already true scale (JWST : 90 km).
+  }
+
+  exit(): void {
+    this.s.scene.remove(this.group);
+    this.inset.remove();
+    this.s.labels.setAnchors([]);
+    this.s.captions.clear();
+  }
+}

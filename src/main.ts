@@ -1,10 +1,16 @@
 import { ACESFilmicToneMapping, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { Act0Problem } from './acts/act0-problem';
+import { Act1Lens } from './acts/act1-lens';
 import { Act2FocalLine } from './acts/act2-focal-line';
 import { Act3Sundiver } from './acts/act3-sundiver';
 import { Act4Pearls } from './acts/act4-pearls';
 import { Act5Imaging } from './acts/act5-imaging';
+import { Act6Worlds } from './acts/act6-worlds';
+import { Act7Epilogue } from './acts/act7-epilogue';
 import type { Act, ActMode, ActServices } from './acts/act';
+import { AmbientAudio } from './audio/ambient';
+import { Credits } from './ui/credits';
 import { createComposer } from './render/bloom';
 import { OriginFrame } from './render/floating-origin';
 import { createStarfield } from './render/starfield';
@@ -20,14 +26,14 @@ import { TimeControls } from './ui/time-controls';
 import './ui/styles.css';
 
 const CHAPTERS = [
-  { id: 0, title: 'THE PROBLEM', available: false },
-  { id: 1, title: "EINSTEIN'S LENS", available: false },
+  { id: 0, title: 'THE PROBLEM', available: true },
+  { id: 1, title: "EINSTEIN'S LENS", available: true },
   { id: 2, title: 'THE FOCAL LINE', available: true },
   { id: 3, title: 'THE SUNDIVER', available: true },
   { id: 4, title: 'STRING OF PEARLS', available: true },
   { id: 5, title: 'IMAGING THE RING', available: true },
-  { id: 6, title: 'MANY WORLDS', available: false },
-  { id: 7, title: 'EPILOGUE', available: false }
+  { id: 6, title: 'MANY WORLDS', available: true },
+  { id: 7, title: 'EPILOGUE', available: true }
 ];
 
 const app = document.getElementById('app');
@@ -87,7 +93,15 @@ tourButton.textContent = 'TOUR';
 const exploreButton = document.createElement('button');
 exploreButton.textContent = 'EXPLORE';
 modeToggle.append(tourButton, exploreButton);
-topbar.append(brand, heading, modeToggle);
+
+const util = document.createElement('div');
+util.className = 'util';
+const muteButton = document.createElement('button');
+const creditsButton = document.createElement('button');
+creditsButton.textContent = 'CREDITS';
+util.append(muteButton, creditsButton);
+
+topbar.append(brand, heading, modeToggle, util);
 ui.appendChild(topbar);
 
 const labels = new LabelLayer(ui);
@@ -107,6 +121,29 @@ const timeControls = new TimeControls(ui, {
 });
 
 const rail = new ChapterRail(ui, CHAPTERS, (id) => switchAct(id));
+
+// Audio: generative, gesture-gated, muted state persisted.
+const audio = new AmbientAudio();
+function refreshMuteButton(): void {
+  muteButton.textContent = audio.isMuted ? 'AUDIO OFF' : 'AUDIO ON';
+  muteButton.classList.toggle('muted', audio.isMuted);
+}
+refreshMuteButton();
+muteButton.addEventListener('click', () => {
+  audio.start();
+  audio.toggleMute();
+  refreshMuteButton();
+});
+const startAudioOnce = (): void => {
+  audio.start();
+  audio.setAct(currentAct?.id ?? 2);
+  window.removeEventListener('pointerdown', startAudioOnce);
+  window.removeEventListener('keydown', startAudioOnce);
+};
+window.addEventListener('pointerdown', startAudioOnce);
+window.addEventListener('keydown', startAudioOnce);
+
+new Credits(ui, creditsButton);
 
 function setMode(next: ActMode): void {
   mode = next;
@@ -138,10 +175,14 @@ const services: ActServices = {
 };
 
 const actFactories = new Map<number, (s: ActServices) => Act>([
+  [0, (s) => new Act0Problem(s)],
+  [1, (s) => new Act1Lens(s)],
   [2, (s) => new Act2FocalLine(s)],
   [3, (s) => new Act3Sundiver(s)],
   [4, (s) => new Act4Pearls(s)],
-  [5, (s) => new Act5Imaging(s)]
+  [5, (s) => new Act5Imaging(s)],
+  [6, (s) => new Act6Worlds(s)],
+  [7, (s) => new Act7Epilogue(s)]
 ]);
 const actCache = new Map<number, Act>();
 
@@ -158,6 +199,8 @@ function switchAct(id: number): void {
   rail.setActive(id);
   currentAct.enter(mode);
   setMode(mode);
+  audio.setAct(id);
+  audio.tick();
 }
 
 switchAct(2);
