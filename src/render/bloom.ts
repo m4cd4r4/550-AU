@@ -10,7 +10,11 @@ export function createComposer(
   scene: Scene,
   camera: Camera,
   bloomStrength = 0.85
-): { composer: EffectComposer; resize: (w: number, h: number) => void } {
+): {
+  composer: EffectComposer;
+  resize: (w: number, h: number) => void;
+  setBloomStrength: (strength: number) => void;
+} {
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
   const bloom = new UnrealBloomPass(new Vector2(1920, 1080), bloomStrength, 0.55, 0.55);
@@ -21,6 +25,9 @@ export function createComposer(
     resize: (w, h) => {
       composer.setSize(w, h);
       bloom.setSize(w, h);
+    },
+    setBloomStrength: (strength) => {
+      bloom.strength = strength;
     }
   };
 }

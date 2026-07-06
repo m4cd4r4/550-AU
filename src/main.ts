@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Act2FocalLine } from './acts/act2-focal-line';
 import { Act3Sundiver } from './acts/act3-sundiver';
 import { Act4Pearls } from './acts/act4-pearls';
+import { Act5Imaging } from './acts/act5-imaging';
 import type { Act, ActMode, ActServices } from './acts/act';
 import { createComposer } from './render/bloom';
 import { OriginFrame } from './render/floating-origin';
@@ -24,7 +25,7 @@ const CHAPTERS = [
   { id: 2, title: 'THE FOCAL LINE', available: true },
   { id: 3, title: 'THE SUNDIVER', available: true },
   { id: 4, title: 'STRING OF PEARLS', available: true },
-  { id: 5, title: 'IMAGING THE RING', available: false },
+  { id: 5, title: 'IMAGING THE RING', available: true },
   { id: 6, title: 'MANY WORLDS', available: false },
   { id: 7, title: 'EPILOGUE', available: false }
 ];
@@ -47,7 +48,7 @@ const camera = new PerspectiveCamera(50, window.innerWidth / window.innerHeight,
 camera.position.set(0, 0.02, 0.11);
 scene.add(camera);
 
-const { composer, resize: resizeComposer } = createComposer(renderer, scene, camera);
+const { composer, resize: resizeComposer, setBloomStrength } = createComposer(renderer, scene, camera);
 
 const starfield = createStarfield(5000, renderer.getPixelRatio());
 scene.add(starfield);
@@ -132,13 +133,15 @@ const services: ActServices = {
   setActHeading: (name, question) => {
     actName.textContent = name;
     actQuestion.textContent = question;
-  }
+  },
+  setBloom: setBloomStrength
 };
 
 const actFactories = new Map<number, (s: ActServices) => Act>([
   [2, (s) => new Act2FocalLine(s)],
   [3, (s) => new Act3Sundiver(s)],
-  [4, (s) => new Act4Pearls(s)]
+  [4, (s) => new Act4Pearls(s)],
+  [5, (s) => new Act5Imaging(s)]
 ]);
 const actCache = new Map<number, Act>();
 

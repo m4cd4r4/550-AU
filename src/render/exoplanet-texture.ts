@@ -48,7 +48,9 @@ function makeNoise(perm: number[], period: number) {
   };
 }
 
-export function createExoplanetTexture(seed = 550): CanvasTexture {
+// The raw map canvas, for consumers that need pixel access (the Act 5
+// reconstruction panel samples it cell by cell).
+export function createExoplanetCanvas(seed = 550): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   canvas.width = SIZE;
   canvas.height = SIZE;
@@ -120,8 +122,11 @@ export function createExoplanetTexture(seed = 550): CanvasTexture {
     }
   }
   ctx.putImageData(img, 0, 0);
+  return canvas;
+}
 
-  const texture = new CanvasTexture(canvas);
+export function createExoplanetTexture(seed = 550): CanvasTexture {
+  const texture = new CanvasTexture(createExoplanetCanvas(seed));
   texture.wrapS = RepeatWrapping;
   texture.minFilter = LinearFilter;
   texture.magFilter = LinearFilter;

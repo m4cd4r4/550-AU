@@ -386,3 +386,24 @@ body {
   letter-spacing: 0.14em;
   margin-bottom: 4px;
 }
+
+.recon-panel {
+  position: absolute;
+  right: 12px;
+  top: 296px;
+  width: 258px;
+  padding: 8px 10px 6px;
+  pointer-events: auto;
+}
+
+.recon-panel canvas {
+  display: block;
+  border: 1px solid var(--border);
+}
+
+.recon-panel .recon-status {
+  margin-top: 4px;
+  color: var(--text-dim);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+}
