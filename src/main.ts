@@ -1,6 +1,7 @@
 import { ACESFilmicToneMapping, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Act2FocalLine } from './acts/act2-focal-line';
+import { Act3Sundiver } from './acts/act3-sundiver';
 import type { Act, ActMode, ActServices } from './acts/act';
 import { createComposer } from './render/bloom';
 import { OriginFrame } from './render/floating-origin';
@@ -20,7 +21,7 @@ const CHAPTERS = [
   { id: 0, title: 'THE PROBLEM', available: false },
   { id: 1, title: "EINSTEIN'S LENS", available: false },
   { id: 2, title: 'THE FOCAL LINE', available: true },
-  { id: 3, title: 'THE SUNDIVER', available: false },
+  { id: 3, title: 'THE SUNDIVER', available: true },
   { id: 4, title: 'STRING OF PEARLS', available: false },
   { id: 5, title: 'IMAGING THE RING', available: false },
   { id: 6, title: 'MANY WORLDS', available: false },
@@ -103,10 +104,7 @@ const timeControls = new TimeControls(ui, {
   onScrub: (p) => currentAct?.onScrub(p)
 });
 
-const rail = new ChapterRail(ui, CHAPTERS, (id) => {
-  if (id === 2) rail.setActive(2);
-});
-rail.setActive(2);
+const rail = new ChapterRail(ui, CHAPTERS, (id) => switchAct(id));
 
 function setMode(next: ActMode): void {
   mode = next;
@@ -136,9 +134,28 @@ const services: ActServices = {
   }
 };
 
-currentAct = new Act2FocalLine(services);
-currentAct.enter(mode);
-setMode('tour');
+const actFactories = new Map<number, (s: ActServices) => Act>([
+  [2, (s) => new Act2FocalLine(s)],
+  [3, (s) => new Act3Sundiver(s)]
+]);
+const actCache = new Map<number, Act>();
+
+function switchAct(id: number): void {
+  const factory = actFactories.get(id);
+  if (!factory || currentAct?.id === id) return;
+  currentAct?.exit();
+  let act = actCache.get(id);
+  if (!act) {
+    act = factory(services);
+    actCache.set(id, act);
+  }
+  currentAct = act;
+  rail.setActive(id);
+  currentAct.enter(mode);
+  setMode(mode);
+}
+
+switchAct(2);
 
 let statsUpdate: (() => void) | null = null;
 if (import.meta.env.DEV) {

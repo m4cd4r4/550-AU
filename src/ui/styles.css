@@ -371,3 +371,18 @@ body {
     min-width: 0;
   }
 }
+
+.race-chart {
+  position: absolute;
+  right: 12px;
+  top: 332px;
+  padding: 8px 10px 6px;
+  pointer-events: auto;
+}
+
+.race-chart .chart-title {
+  color: var(--text-dim);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  margin-bottom: 4px;
+}
