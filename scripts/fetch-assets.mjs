@@ -17,6 +17,14 @@ const HYG_URLS = [
 
 const SUN_TEXTURE_URL = 'https://www.solarsystemscope.com/textures/download/2k_sun.jpg';
 
+// SOHO LASCO C2 coronagraph image, Act 5 backdrop. Realtime endpoints serve
+// the latest frame; whichever responds is cached and committed for reproducibility.
+const CORONA_URLS = [
+  'https://soho.nascom.nasa.gov/data/realtime/c2/1024/latest.jpg',
+  'https://sohowww.nascom.nasa.gov/data/realtime/c2/1024/latest.jpg',
+  'https://soho.esac.esa.int/data/realtime/c2/1024/latest.jpg'
+];
+
 const MAG_LIMIT = 6.5;
 // Catalogue designations of mission targets fainter than the magnitude cut.
 const KEEP_GLIESE = new Set(['Gl 551', 'GJ 551', 'Gl 273', 'GJ 273']);
@@ -134,6 +142,15 @@ async function main() {
   await mkdir(dirname(sunPath), { recursive: true });
   await writeFile(sunPath, sun);
   console.log(`[write] ${sunPath}`);
+
+  const corona = await downloadFirst(
+    CORONA_URLS,
+    join(cacheDir, 'corona-lasco-c2.jpg'),
+    'SOHO LASCO C2 corona image'
+  );
+  const coronaPath = join(root, 'public', 'assets', 'textures', 'corona-lasco-c2.jpg');
+  await writeFile(coronaPath, corona);
+  console.log(`[write] ${coronaPath}`);
 
   console.log('done. Update CREDITS.md if sources changed.');
 }

@@ -16,11 +16,11 @@ procedural fallback for each asset so it runs fully offline.
 | Asset | File | Source | Licence |
 |---|---|---|---|
 | Sun photosphere texture (2k) | `public/assets/textures/2k-sun.jpg` | [Solar System Scope textures](https://www.solarsystemscope.com/textures/) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| Corona backdrop (LASCO C2 coronagraph frame, 2026-07-05) | `public/assets/textures/corona-lasco-c2.jpg` | [SOHO LASCO](https://soho.nascom.nasa.gov/) - courtesy of SOHO/LASCO consortium. SOHO is a project of international cooperation between ESA and NASA | Free for educational and personal use with credit ([SOHO image use policy](https://soho.nascom.nasa.gov/data/data.html)); not copyrighted. The app blends it with an original procedural inner corona below the LASCO occulter edge |
 
 ## Planned for later slices (per docs/BUILD-PROMPT.md section 6)
 
 - NASA SVS Deep Star Maps 2020 sky texture (public domain)
-- SOHO LASCO / SDO corona imagery (public domain)
 - NASA Blue Marble Earth (public domain)
 - NASA 3D resources: Voyager 1 and JWST models (public domain)
 
