@@ -146,6 +146,9 @@ export function createLensMaterial(): ShaderMaterial & { uniforms: LensUniforms 
     fragmentShader: FRAGMENT,
     depthTest: false,
     depthWrite: false,
+    // Render in the transparent pass (fully opaque output) so it composites
+    // over additive sprites and points that draw after the opaque pass.
+    transparent: true,
     uniforms: {
       uResolution: { value: new Vector2(1, 1) },
       uArcsecPerPx: { value: 0.01 },

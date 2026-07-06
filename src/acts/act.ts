@@ -25,6 +25,9 @@ export interface ActServices {
   inspector: Inspector;
   timeControls: TimeControls;
   setActHeading: (name: string, question: string) => void;
+  // Per-act bloom strength; the app default is 0.85. Acts that raise or
+  // lower it must restore the default in exit().
+  setBloom: (strength: number) => void;
 }
 
 export interface Act {

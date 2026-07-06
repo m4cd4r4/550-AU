@@ -2,11 +2,13 @@
 
 Interactive real-physics visualisation of the Solar Gravitational Lens Telescope (SGLT) mission concept: solar-sail swarms flying to 650+ AU to use the Sun as a gravitational lens and image an exoplanet's surface. Named for the minimum solar gravitational focal distance, 547.8 AU.
 
-Status: **in build. Slices 1-4 of 6 complete: app shell, physics core, Act 2 (The Focal Line), Act 5 lensing-shader spike, Act 3 (The Sundiver), Act 4 (String of Pearls).**
+Status: **in build. Slices 1-5 of 6 complete: app shell, physics core, Acts 2-5 with the live lensing shader. Remaining: Acts 0, 1, 6, lean Act 7, audio, credits overlay, polish.**
 
 Open source (MIT). Repo: `m4cd4r4/550-AU`.
 
-![The Einstein ring at 650 AU over the LASCO C2 corona](docs/screenshots/spike-ring-650au-1080p.png)
+![Act 5: the Einstein ring from the lead pearl at 650 AU](docs/screenshots/act5-ring-view-1440p.png)
+
+![Act 5: the imaging dance across the 32 km cylinder, reconstruction filling](docs/screenshots/act5-dance-1440p.png)
 
 ![Act 3: perihelion pass at 0.13 AU, sail face-on at 126 km/s](docs/screenshots/act3-perihelion-1080p.png)
 
