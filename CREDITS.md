@@ -3,6 +3,14 @@
 Every bundled asset, its source, and its licence. The app also has a
 procedural fallback for each asset so it runs fully offline.
 
+## Narrative inspiration
+
+AstroKobi's video ["NASA's $40 BILLION Plan To Image Alien Worlds"](https://www.youtube.com/watch?v=go-50Dpzs20)
+first surfaced this mission concept and shaped which facts and story beats
+to research further. It is a starting point, not a source: no narration is
+reproduced anywhere in the app, and every fact was independently verified
+against the primary sources below before use.
+
 ## Data
 
 | Asset | File | Source | Licence |
