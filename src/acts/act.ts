@@ -28,6 +28,9 @@ export interface ActServices {
   // Per-act bloom strength; the app default is 0.85. Acts that raise or
   // lower it must restore the default in exit().
   setBloom: (strength: number) => void;
+  // Show or hide the shared Sun. Schematic acts with their own local scale
+  // (Act 0's JWST : 90 km frame) hide it and restore it in exit().
+  setSunVisible: (visible: boolean) => void;
 }
 
 export interface Act {

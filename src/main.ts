@@ -171,7 +171,10 @@ const services: ActServices = {
     actName.textContent = name;
     actQuestion.textContent = question;
   },
-  setBloom: setBloomStrength
+  setBloom: setBloomStrength,
+  setSunVisible: (visible) => {
+    sun.group.visible = visible;
+  }
 };
 
 const actFactories = new Map<number, (s: ActServices) => Act>([
@@ -197,6 +200,7 @@ function switchAct(id: number): void {
   }
   currentAct = act;
   rail.setActive(id);
+  sun.group.visible = true; // default; acts hide it in enter() if needed
   currentAct.enter(mode);
   setMode(mode);
   audio.setAct(id);

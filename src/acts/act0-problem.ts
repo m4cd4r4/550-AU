@@ -105,6 +105,9 @@ export class Act0Problem implements Act {
   enter(mode: ActMode): void {
     this.s.scene.add(this.group);
     this.s.origin.setOrigin(vec3d(0, 0, 0));
+    // Act 0 has its own JWST-scale frame; the shared Sun would sit on the
+    // JWST at the shared origin. Hide it; the host star is an abstraction here.
+    this.s.setSunVisible(false);
     this.s.setActHeading(`ACT 0 / ${this.title}`, this.question);
     this.s.timeline.reset();
     this.s.timeline.setWarp(1);
@@ -153,10 +156,11 @@ export class Act0Problem implements Act {
   }
 
   private placeTourCamera(p: number): void {
-    // Start on the JWST mirror, pull back through the 90 km ring.
-    const e = p * p * (3 - 2 * p);
-    const dist = 4 + e * RING_RADIUS * 1.35;
-    this.s.camera.position.set(Math.sin(p * 0.6) * dist * 0.15, dist * 0.12, dist);
+    // Hold on the JWST mirror, then pull back hard to reveal the whole 90 km
+    // ring. Cubic easing keeps the craft readable through the first third;
+    // the final distance frames the full ring inside the field of view.
+    const dist = 3.2 + Math.pow(p, 3) * RING_RADIUS * 2.6;
+    this.s.camera.position.set(Math.sin(p * 0.8) * dist * 0.06, dist * 0.05, dist);
     this.s.camera.lookAt(0, 0, 0);
   }
 
@@ -175,16 +179,14 @@ export class Act0Problem implements Act {
     }
   }
 
-  private updateHud(camDist: number): void {
-    const shown = Math.min(APERTURE_KM, (camDist / RING_RADIUS) * APERTURE_KM * 0.75);
+  private updateHud(_camDist: number): void {
     const rows: [string, string][] = [
       ['JWST APERTURE', `${JWST_M} m`],
       ['APERTURE FOR A MAP', `${APERTURE_KM} km`],
       ['RATIO', `${Math.round((APERTURE_KM * 1000) / JWST_M).toLocaleString('en-GB')} to 1`],
       ['STAR / PLANET CONTRAST', `${facts.problem.starPlanetContrastRatio.toExponential(0)}`],
       ['CORONAGRAPH LIMIT', `${facts.problem.coronagraphContrastLimit.toExponential(0)}`],
-      ['LENS AMPLIFICATION', `${facts.lens.lightAmplificationVisible.toExponential(0)}`],
-      ['FIELD SPAN', `about ${shown.toFixed(0)} km`]
+      ['LENS AMPLIFICATION', `${facts.lens.lightAmplificationVisible.toExponential(0)}`]
     ];
     this.s.hud.setRows(rows);
     this.s.ribbon.set({ mapLabel: 'TRUE SCALE, JWST : 90 KM', compression: 1, trueDistanceAU: 1 });
