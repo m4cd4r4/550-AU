@@ -272,7 +272,7 @@ export class Act6Worlds implements Act {
     const rect = this.s.renderer.domElement.getBoundingClientRect();
     const px = event.clientX - rect.left;
     const py = event.clientY - rect.top;
-    let best = 40;
+    let best = 64; // stars are large glowing targets; be generous
     let picked = -1;
     for (let i = 0; i < this.targets.length; i++) {
       const t = this.targets[i];
