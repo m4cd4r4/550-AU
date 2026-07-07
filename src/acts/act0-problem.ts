@@ -125,8 +125,10 @@ export class Act0Problem implements Act {
     this.s.inspector.hide();
     if (mode === 'explore') {
       this.s.timeline.pause();
+      // Explore inspects the JWST up close; the full-ring reveal is the
+      // tour's job (the ring radius exceeds the shared camera max distance).
       this.s.controls.target.set(0, 0, 0);
-      this.s.camera.position.set(0, 0, RING_RADIUS * 1.4);
+      this.s.camera.position.set(6, 3, 11);
     } else {
       this.s.captions.clear();
     }
