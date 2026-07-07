@@ -675,3 +675,26 @@ body {
     font-size: 12px;
   }
 }
+
+/* Keyboard focus: a visible amber ring on every interactive control. The
+   scene chrome is borderless over a dark canvas, so the default outline is
+   easy to miss; make it explicit. */
+.ui button:focus-visible,
+.topbar button:focus-visible,
+.chapter-rail .chapter:focus-visible,
+.credits-close:focus-visible,
+.credits-source a:focus-visible,
+input[type='range']:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Respect reduced-motion for the DOM chrome transitions. The 3D tour is the
+   content itself and is user-controlled (pause / scrub). */
+@media (prefers-reduced-motion: reduce) {
+  .captions,
+  .ui button,
+  .credits-source a {
+    transition: none;
+  }
+}

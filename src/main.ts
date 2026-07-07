@@ -127,6 +127,7 @@ const audio = new AmbientAudio();
 function refreshMuteButton(): void {
   muteButton.textContent = audio.isMuted ? 'AUDIO OFF' : 'AUDIO ON';
   muteButton.classList.toggle('muted', audio.isMuted);
+  muteButton.setAttribute('aria-pressed', String(!audio.isMuted));
 }
 refreshMuteButton();
 muteButton.addEventListener('click', () => {
