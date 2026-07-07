@@ -34,6 +34,7 @@ export class TimeControls {
     this.scrub.type = 'range';
     this.scrub.min = '0';
     this.scrub.max = '1000';
+    this.scrub.setAttribute('aria-label', 'Scrub the act timeline');
     this.scrub.addEventListener('pointerdown', () => {
       this.scrubbing = true;
     });

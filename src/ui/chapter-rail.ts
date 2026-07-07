@@ -35,7 +35,10 @@ export class ChapterRail {
 
   setActive(id: number): void {
     for (const [chapterId, button] of this.buttons) {
-      button.classList.toggle('active', chapterId === id);
+      const active = chapterId === id;
+      button.classList.toggle('active', active);
+      if (active) button.setAttribute('aria-current', 'true');
+      else button.removeAttribute('aria-current');
     }
   }
 }
