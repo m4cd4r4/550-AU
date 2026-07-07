@@ -1,10 +1,16 @@
 # 550 AU
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
+![Three.js](https://img.shields.io/badge/Three.js-0.185-000000?logo=three.js&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-42%20passing-brightgreen)
+
 Interactive real-physics visualisation of the Solar Gravitational Lens Telescope (SGLT) mission concept: solar-sail swarms flying to 650+ AU to use the Sun as a gravitational lens and image an exoplanet's surface. Named for the minimum solar gravitational focal distance, 547.8 AU.
 
 Status: **all eight acts complete (Tour and Explore), physics tests green, generative audio, credits overlay, honest-scale system with a true-scale toggle. GitHub Pages workflow is prepared but not enabled.**
 
-Open source (MIT). Repo: `m4cd4r4/550-AU`.
+Repo: `m4cd4r4/550-AU`.
 
 ![Act 5: the Einstein ring from the lead pearl at 650 AU](docs/screenshots/act5-ring-view-1440p.png)
 
