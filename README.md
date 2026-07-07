@@ -160,6 +160,7 @@ Dramatised, and labelled as such in-app:
 
 ## Sources
 
+- AstroKobi, ["NASA's $40 BILLION Plan To Image Alien Worlds"](https://www.youtube.com/watch?v=go-50Dpzs20) - the video that surfaced this mission concept and shaped which facts and story beats to research. No narration was reproduced; all copy in this app is original (see the IP note in `docs/SIM-PLAN.md`)
 - Turyshev et al 2020, NIAC Phase III report, [arXiv:2002.11871](https://arxiv.org/abs/2002.11871)
 - Turyshev and Andersson 2002, [arXiv:gr-qc/0205126](https://arxiv.org/abs/gr-qc/0205126)
 - FOCAL mission heritage (Maccone, Eshleman)
