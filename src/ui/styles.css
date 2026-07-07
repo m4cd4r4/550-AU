@@ -594,3 +594,84 @@ body {
   color: var(--text-dim);
   font-size: 9px;
 }
+
+/* Responsive degradation. Desktop-first; these keep the instrument chrome
+   from colliding as the viewport narrows. A dedicated mobile Tour-only
+   layout is tracked as a follow-up. */
+
+/* Tablet: the bottom ribbon and time controls collide around 1100px.
+   Narrow the scrubber so the two clear each other. */
+@media (max-width: 1200px) {
+  .time-controls input[type='range'] {
+    width: 130px;
+  }
+}
+
+/* Phone: keep the top bar to a single row and stop the bottom controls
+   overlapping. Explore still works, but the layout is Tour-first. */
+@media (max-width: 720px) {
+  .brand {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+  .brand .sub {
+    display: none;
+  }
+  .act-heading {
+    padding: 8px 10px;
+  }
+  .act-heading .act-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 11px;
+  }
+  .act-heading .act-question {
+    display: none;
+  }
+  .mode-toggle {
+    padding: 0 6px;
+    gap: 4px;
+  }
+  .mode-toggle button,
+  .topbar .util button {
+    padding: 6px 8px;
+    font-size: 9px;
+  }
+  .hud {
+    top: 46px;
+    min-width: 0;
+    max-width: 62vw;
+    font-size: 10px;
+  }
+  .scale-ribbon {
+    left: 12px;
+    right: 12px;
+    bottom: 66px;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+  }
+  .time-controls {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    justify-content: flex-end;
+  }
+  .time-controls input[type='range'] {
+    flex: 1;
+    width: auto;
+    min-width: 80px;
+  }
+  .contrast-inset,
+  .epilogue-card,
+  .recon-panel,
+  .race-chart {
+    display: none;
+  }
+  .captions {
+    bottom: 132px;
+    max-width: 88vw;
+    font-size: 12px;
+  }
+}
