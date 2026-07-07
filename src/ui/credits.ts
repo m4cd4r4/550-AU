@@ -50,11 +50,13 @@ const CREDITS: CreditEntry[] = [
 
 export class Credits {
   private readonly overlay: HTMLElement;
+  private closeButton!: HTMLButtonElement;
 
   constructor(parent: HTMLElement, private readonly button: HTMLButtonElement) {
     this.overlay = document.createElement('div');
     this.overlay.className = 'credits-overlay';
     this.overlay.setAttribute('role', 'dialog');
+    this.overlay.setAttribute('aria-modal', 'true');
     this.overlay.setAttribute('aria-label', 'Credits and asset licences');
 
     const panel = document.createElement('div');
@@ -69,6 +71,7 @@ export class Credits {
     close.className = 'credits-close';
     close.textContent = 'CLOSE';
     close.addEventListener('click', () => this.hide());
+    this.closeButton = close;
     head.appendChild(close);
     panel.appendChild(head);
 
@@ -109,16 +112,44 @@ export class Credits {
     parent.appendChild(this.overlay);
 
     this.button.addEventListener('click', () => this.toggle());
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') this.hide();
+    // Keep focus inside the dialog while it is open (simple two-end trap).
+    this.overlay.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        this.hide();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const focusable = this.overlay.querySelectorAll<HTMLElement>('button, a[href]');
+      if (focusable.length === 0) return;
+      const first = focusable[0]!;
+      const last = focusable[focusable.length - 1]!;
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     });
   }
 
+  private get isOpen(): boolean {
+    return this.overlay.classList.contains('visible');
+  }
+
   toggle(): void {
-    this.overlay.classList.toggle('visible');
+    if (this.isOpen) this.hide();
+    else this.show();
+  }
+
+  show(): void {
+    this.overlay.classList.add('visible');
+    this.closeButton.focus();
   }
 
   hide(): void {
+    if (!this.isOpen) return;
     this.overlay.classList.remove('visible');
+    this.button.focus(); // return focus to the trigger
   }
 }
