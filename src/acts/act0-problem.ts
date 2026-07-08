@@ -8,13 +8,15 @@
 import {
   BufferAttribute,
   BufferGeometry,
+  DirectionalLight,
   Group,
+  HemisphereLight,
   Line,
   LineBasicMaterial
 } from 'three';
 import facts from '../data/mission-facts.json';
 import { vec3d } from '../sim/vec3d';
-import { buildJwstModel } from '../render/jwst-model';
+import { buildJwstModel, loadJwstGltf } from '../render/jwst-model';
 import type { LabelAnchor } from '../render/focal-ruler';
 import type { Act, ActMode, ActServices } from './act';
 
@@ -33,7 +35,9 @@ export class Act0Problem implements Act {
   readonly question = 'Why can JWST not do this?';
 
   private readonly group = new Group();
-  private readonly jwst = buildJwstModel();
+  private readonly jwst = new Group();
+  private readonly keyLight = new DirectionalLight(0xfff2e0, 1.3);
+  private readonly fillLight = new HemisphereLight(0xbcd2ff, 0x161d29, 0.6);
   private readonly ring: Line;
   private readonly inset: HTMLElement;
   private readonly anchors: LabelAnchor[];
@@ -42,6 +46,12 @@ export class Act0Problem implements Act {
   private endShown = false;
 
   constructor(private readonly s: ActServices) {
+    // Procedural placeholder now; swap in the real NASA model when it loads.
+    this.jwst.add(buildJwstModel());
+    loadJwstGltf((model) => {
+      this.jwst.clear();
+      this.jwst.add(model);
+    });
     this.group.add(this.jwst);
 
     // 90 km aperture as a ghosted ring, concentric with the JWST mirror.
@@ -78,6 +88,10 @@ export class Act0Problem implements Act {
 
   enter(mode: ActMode): void {
     this.s.scene.add(this.group);
+    // Light the NASA model (its materials are lit; the rest of the scene is
+    // unlit MeshBasic and ignores these).
+    this.keyLight.position.set(6, 8, 10);
+    this.s.scene.add(this.keyLight, this.fillLight);
     this.s.origin.setOrigin(vec3d(0, 0, 0));
     // Act 0 has its own JWST-scale frame; the shared Sun would sit on the
     // JWST at the shared origin. Hide it; the host star is an abstraction here.
@@ -205,6 +219,7 @@ export class Act0Problem implements Act {
 
   exit(): void {
     this.s.scene.remove(this.group);
+    this.s.scene.remove(this.keyLight, this.fillLight);
     this.inset.remove();
     this.s.labels.setAnchors([]);
     this.s.captions.clear();

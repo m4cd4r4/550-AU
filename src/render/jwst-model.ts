@@ -7,6 +7,7 @@
 // the starfield. It reads as JWST at a glance; that is the point.
 
 import {
+  Box3,
   BufferAttribute,
   BufferGeometry,
   CircleGeometry,
@@ -17,8 +18,11 @@ import {
   LineBasicMaterial,
   Mesh,
   MeshBasicMaterial,
-  PlaneGeometry
+  PlaneGeometry,
+  Vector3
 } from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 const GOLD = 0xe7b448;
 const STRUT = 0x8b93a3;
@@ -107,4 +111,38 @@ function lineGeom(points: number[]): BufferGeometry {
   const geometry = new BufferGeometry();
   geometry.setAttribute('position', new BufferAttribute(new Float32Array(points), 3));
   return geometry;
+}
+
+// The real thing: NASA's public-domain JWST model (glTF 2.0, Draco). Loaded
+// lazily and swapped in over the procedural placeholder; if it fails (offline)
+// the placeholder stays. Needs a light in the scene (its materials are lit).
+const MODEL_URL = `${import.meta.env.BASE_URL}assets/models/jwst.glb`;
+const DRACO_PATH = `${import.meta.env.BASE_URL}assets/draco/`;
+const TARGET_SIZE = 6; // largest bounding dimension, scene units
+
+export function loadJwstGltf(onLoad: (model: Group) => void): void {
+  const draco = new DRACOLoader();
+  draco.setDecoderPath(DRACO_PATH);
+  const loader = new GLTFLoader();
+  loader.setDRACOLoader(draco);
+  loader.load(
+    MODEL_URL,
+    (gltf) => {
+      const inner = gltf.scene;
+      const box = new Box3().setFromObject(inner);
+      const size = box.getSize(new Vector3());
+      const center = box.getCenter(new Vector3());
+      inner.position.sub(center); // centre the model on the origin
+      const wrap = new Group();
+      wrap.add(inner);
+      wrap.scale.setScalar(TARGET_SIZE / (Math.max(size.x, size.y, size.z) || 1));
+      // Face the gold mirror toward +z (the tour looks straight on; Explore
+      // sees it three-quarter), with a slight roll so it reads as a solid.
+      wrap.rotation.set(Math.PI, Math.PI, 0.12);
+      draco.dispose();
+      onLoad(wrap);
+    },
+    undefined,
+    (err) => console.warn('JWST glTF failed to load; keeping procedural model', err)
+  );
 }

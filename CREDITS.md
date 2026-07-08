@@ -26,8 +26,15 @@ against the primary sources below before use.
 | Sun photosphere texture (2k) | `public/assets/textures/2k-sun.jpg` | [Solar System Scope textures](https://www.solarsystemscope.com/textures/) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | Planet surface maps (Act 2 solar-system ruler): Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Saturn's ring | `public/assets/textures/planets/` | [Solar System Scope textures](https://www.solarsystemscope.com/textures/); resized to 512 px and shared with the cosmos-collective solar-system page | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | Corona backdrop (LASCO C2 coronagraph frame, 2026-07-05) | `public/assets/textures/corona-lasco-c2.jpg` | [SOHO LASCO](https://soho.nascom.nasa.gov/) - courtesy of SOHO/LASCO consortium. SOHO is a project of international cooperation between ESA and NASA | Free for educational and personal use with credit ([SOHO image use policy](https://soho.nascom.nasa.gov/data/data.html)); not copyrighted. The app blends it with an original procedural inner corona below the LASCO occulter edge |
-| JWST primary mirror render (Act 0 loupe) | `public/assets/renders/jwst.jpg` | ["JWST's Golden Mirror Revealed"](https://images.nasa.gov/details/GSFC_20171208_Archive_e000368), NASA/Chris Gunn (NASA Goddard) | Public domain (NASA imagery). The 3D JWST in the scene is original procedural geometry; this render is a reference loupe |
+| JWST primary mirror render (Act 0 loupe) | `public/assets/renders/jwst.jpg` | ["JWST's Golden Mirror Revealed"](https://images.nasa.gov/details/GSFC_20171208_Archive_e000368), NASA/Chris Gunn (NASA Goddard) | Public domain (NASA imagery); shown in the loupe beside the 3D model |
 | Voyager spacecraft render (Act 4 loupe) | `public/assets/renders/voyager.jpg` | ["Voyager in Space Artist Concept" PIA17049](https://images.nasa.gov/details/PIA17049), NASA/JPL-Caltech | Public domain (NASA/JPL imagery). Shown for both Voyager 1 and 2, which are identical craft |
+
+## 3D models
+
+| Asset | File | Source | Licence |
+|---|---|---|---|
+| James Webb Space Telescope (Act 0) | `public/assets/models/jwst.glb` | [nasa/NASA-3D-Resources](https://github.com/nasa/NASA-3D-Resources/tree/master/3D%20Models/James%20Webb%20Space%20Telescope%20(B)) - "James Webb Space Telescope (B)", glTF 2.0 with Draco compression | Public domain (NASA). A procedural JWST is kept as an offline fallback |
+| Draco decoder | `public/assets/draco/` | Bundled from [three.js](https://github.com/mrdoob/three.js) (`examples/jsm/libs/draco/gltf`) so the model decodes offline | Apache-2.0 (Draco) |
 
 ## Planned for later slices (per docs/BUILD-PROMPT.md section 6)
 
