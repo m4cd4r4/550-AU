@@ -102,7 +102,7 @@ export class Act0Problem implements Act {
     this.endShown = false;
     (this.s.hud.el.parentElement ?? document.body).appendChild(this.inset);
     this.s.labels.setAnchors(this.anchors);
-    this.s.loupe.show(JWST_IMG, 'JAMES WEBB SPACE TELESCOPE', '6.5 m mirror, actual NASA render');
+    this.s.loupe.show(JWST_IMG, 'JAMES WEBB SPACE TELESCOPE', '6.5 m mirror');
     this.setMode(mode);
   }
 
