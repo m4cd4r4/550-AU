@@ -53,9 +53,9 @@ internet. Each act has a Tour mode (scripted camera, captions) and an
 Explore mode (free camera, clickable objects). A chapter rail switches
 between them; global controls pause, scrub, and time-warp.
 
-- **Act 0 - The Problem.** JWST at true 6.5 m scale beside the ghosted
-  outline of the roughly 90 km aperture the same image would need by
-  brute force, plus the contrast inset (a planet is about 1e10 times
+- **Act 0 - The Problem.** NASA's 3D JWST model at true 6.5 m scale beside
+  the ghosted outline of the roughly 90 km aperture the same image would need
+  by brute force, plus the contrast inset (a planet is about 1e10 times
   fainter than its star; a coronagraph buys about 1e6 of that).
 - **Act 1 - Einstein's Lens.** Photon rays bending past the Sun,
   converging on the focal line that draws itself outward as impact

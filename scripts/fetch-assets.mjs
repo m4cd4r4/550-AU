@@ -2,7 +2,7 @@
 // HYG star-catalogue subset (src/data/hyg-subset.csv). Run: npm run fetch-assets
 // Raw downloads are cached in .cache/ (gitignored); outputs are committed.
 
-import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { access, copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -30,6 +30,13 @@ const JWST_RENDER_URL =
   'https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e000368/GSFC_20171208_Archive_e000368~small.jpg';
 const VOYAGER_RENDER_URL =
   'https://images-assets.nasa.gov/image/PIA17049/PIA17049~small.jpg';
+
+// NASA's public-domain JWST model (glTF 2.0, Draco), Act 0. The Draco decoder
+// is copied from the installed three.js so the model decodes offline.
+const JWST_MODEL_URL =
+  'https://raw.githubusercontent.com/nasa/NASA-3D-Resources/master/3D%20Models/James%20Webb%20Space%20Telescope%20(B)/James%20Webb%20Space%20Telescope%20(B).glb';
+const DRACO_SRC = join(root, 'node_modules', 'three', 'examples', 'jsm', 'libs', 'draco', 'gltf');
+const DRACO_FILES = ['draco_decoder.js', 'draco_decoder.wasm', 'draco_wasm_wrapper.js'];
 
 const MAG_LIMIT = 6.5;
 // Catalogue designations of mission targets fainter than the magnitude cut.
@@ -172,6 +179,19 @@ async function main() {
   const voyagerPath = join(root, 'public', 'assets', 'renders', 'voyager.jpg');
   await writeFile(voyagerPath, voyager);
   console.log(`[write] ${voyagerPath}`);
+
+  const jwstModel = await downloadFirst([JWST_MODEL_URL], join(cacheDir, 'jwst.glb'), 'JWST 3D model');
+  const modelPath = join(root, 'public', 'assets', 'models', 'jwst.glb');
+  await mkdir(dirname(modelPath), { recursive: true });
+  await writeFile(modelPath, jwstModel);
+  console.log(`[write] ${modelPath}`);
+
+  const dracoDir = join(root, 'public', 'assets', 'draco');
+  await mkdir(dracoDir, { recursive: true });
+  for (const file of DRACO_FILES) {
+    await copyFile(join(DRACO_SRC, file), join(dracoDir, file));
+    console.log(`[copy] ${join(dracoDir, file)}`);
+  }
 
   console.log('done. Update CREDITS.md if sources changed.');
 }
