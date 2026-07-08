@@ -154,6 +154,11 @@ export class Act2FocalLine implements Act {
     const lookFactor = 0.45 + 0.3 * lookEase * lookEase;
     this.lookV3.set(this.dir.x, this.dir.y, this.dir.z).multiplyScalar(displayR * lookFactor);
     this.s.origin.toScene(vec3d(this.lookV3.x, this.lookV3.y, this.lookV3.z), this.lookV3);
+    // Once the outer planets are on screen, aim a touch below the focal line so
+    // the ecliptic disc lifts into the empty upper frame and Neptune, the
+    // outermost planet, clears the bottom edge instead of being cropped.
+    const lift = Math.min(1, Math.max(0, (p - 0.3) / 0.2));
+    this.lookV3.y -= displayR * 0.12 * lift;
     this.s.camera.lookAt(this.lookV3);
     return r;
   }
