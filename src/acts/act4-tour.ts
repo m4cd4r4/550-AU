@@ -76,3 +76,20 @@ export function buildCaptions(traj: SundiverTrajectory): YearCaption[] {
 }
 
 export const END_CAPTION = 'Every year, another pearl. The chain is fleet, relay and redundancy in one.';
+
+export interface LoupeLabel {
+  title: string;
+  sub: string;
+}
+
+// Which Voyager the lead pearl is currently overtaking, if any, for the loupe.
+export function voyagerLoupeAt(leadAU: number): LoupeLabel | null {
+  const v1 = facts.voyager1.distanceAU;
+  const v2 = facts.voyager2.distanceAU;
+  if (leadAU < v2 - 10 || leadAU > v1 + 80) return null;
+  const atV1 = leadAU >= (v1 + v2) / 2;
+  return {
+    title: atV1 ? 'VOYAGER 1' : 'VOYAGER 2',
+    sub: `${atV1 ? v1 : v2} AU, the string sails past humanity's farthest craft`
+  };
+}

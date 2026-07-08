@@ -20,11 +20,12 @@ import { auToM, lightTimeS } from '../sim/units';
 import { copy, vec3d, type Vec3d } from '../sim/vec3d';
 import { formatAu, formatCompression, formatDuration } from '../ui/format';
 import type { Act, ActMode, ActServices } from './act';
-import { buildCaptions, END_CAPTION, TOUR_DURATION_S, tourYears } from './act4-tour';
+import { buildCaptions, END_CAPTION, TOUR_DURATION_S, tourYears, voyagerLoupeAt } from './act4-tour';
 
 const COMPRESSION_D0_AU = 2;
 const WARPS = [0.5, 1, 2, 4];
 const EARTH = PLANETS.find((p) => p.name === 'Earth');
+const VOYAGER_IMG = `${import.meta.env.BASE_URL}assets/renders/voyager.jpg`;
 
 function proximaDir(): Vec3d {
   const proxima = targetsData.targets.find((t) => t.id === 'proxima-b');
@@ -146,9 +147,9 @@ export class Act4Pearls implements Act {
       }
     }
 
-    if (Math.abs(this.missionYears - this.lastComputedYears) > 0.02) {
-      this.recompute();
-    }
+    // Recompute whenever the clock moved so pearls track time smoothly; the
+    // old throttle sampled coarsely and caused the stutter, worst at high warp.
+    if (this.missionYears !== this.lastComputedYears) this.recompute();
 
     if (this.mode === 'tour') this.placeTourCamera(p);
     this.string.update(this.s.origin, this.s.camera);
@@ -157,10 +158,19 @@ export class Act4Pearls implements Act {
     const camDist = this.s.camera.position.length();
     this.relay.update(dtRealS, this.s.origin, Math.max(0.002, camDist * 0.012));
     this.updateHud();
+    this.updateVoyagerLoupe();
   }
 
-  // Rebuild pearl states and dependent structures; runs a few times per
-  // simulated year, not per frame.
+  // As the lead pearl overtakes the Voyagers, magnify the craft it is passing.
+  private updateVoyagerLoupe(): void {
+    const lead = this.pearls[0];
+    const label = this.mode === 'tour' ? voyagerLoupeAt(lead ? lead.rAU : 0) : null;
+    if (label) this.s.loupe.show(VOYAGER_IMG, label.title, label.sub);
+    else this.s.loupe.hide();
+  }
+
+  // Rebuild pearl states and dependent structures. Runs each frame the clock
+  // advances (cheap); the DOM label refresh below stays gated to launch count.
   private recompute(): void {
     this.lastComputedYears = this.missionYears;
     const hadCount = this.pearls.length;
@@ -396,5 +406,6 @@ export class Act4Pearls implements Act {
     this.s.labels.setAnchors([]);
     this.s.captions.clear();
     this.s.inspector.hide();
+    this.s.loupe.hide();
   }
 }

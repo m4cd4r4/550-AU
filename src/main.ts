@@ -21,6 +21,7 @@ import { ChapterRail } from './ui/chapter-rail';
 import { Hud } from './ui/hud';
 import { Inspector } from './ui/inspector';
 import { LabelLayer } from './ui/labels';
+import { Loupe } from './ui/loupe';
 import { ScaleRibbon } from './ui/scale-ribbon';
 import { TimeControls } from './ui/time-controls';
 import './ui/styles.css';
@@ -108,6 +109,7 @@ const labels = new LabelLayer(ui);
 const hud = new Hud(ui);
 const captions = new Captions(ui);
 const inspector = new Inspector(ui);
+const loupe = new Loupe(ui);
 const timeline = new Timeline();
 
 let currentAct: Act | null = null;
@@ -146,8 +148,16 @@ window.addEventListener('keydown', startAudioOnce);
 
 new Credits(ui, creditsButton);
 
+// Auto-advance: in Tour mode, when an act's tour finishes it holds briefly on
+// its closing frame, then the show rolls on to the next act (looping 7 -> 0).
+// Explore mode, a manual chapter jump, or scrubbing away from the end all
+// cancel it, so the viewer stays in control.
+const AUTO_ADVANCE_DWELL_MS = 5500;
+let autoAdvanceAtMs: number | null = null;
+
 function setMode(next: ActMode): void {
   mode = next;
+  if (mode === 'explore') autoAdvanceAtMs = null;
   tourButton.classList.toggle('active', mode === 'tour');
   exploreButton.classList.toggle('active', mode === 'explore');
   currentAct?.setMode(mode);
@@ -168,6 +178,7 @@ const services: ActServices = {
   labels,
   inspector,
   timeControls,
+  loupe,
   setActHeading: (name, question) => {
     actName.textContent = name;
     actQuestion.textContent = question;
@@ -193,6 +204,8 @@ const actCache = new Map<number, Act>();
 function switchAct(id: number): void {
   const factory = actFactories.get(id);
   if (!factory || currentAct?.id === id) return;
+  autoAdvanceAtMs = null;
+  loupe.hide();
   currentAct?.exit();
   let act = actCache.get(id);
   if (!act) {
@@ -235,6 +248,18 @@ renderer.setAnimationLoop(() => {
 
   timeline.update(dt);
   currentAct?.update(dt);
+
+  // Roll on to the next act once the current tour has held on its final frame.
+  if (mode === 'tour' && currentAct) {
+    const tp = timeControls.tourProgress;
+    if (tp !== null && tp >= 1) {
+      if (autoAdvanceAtMs === null) autoAdvanceAtMs = now + AUTO_ADVANCE_DWELL_MS;
+      else if (now >= autoAdvanceAtMs) switchAct((currentAct.id + 1) % CHAPTERS.length);
+    } else {
+      autoAdvanceAtMs = null;
+    }
+  }
+
   if (controls.enabled) controls.update();
   sun.update(services.origin, camera);
   starfield.position.copy(camera.position);

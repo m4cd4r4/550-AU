@@ -10,14 +10,11 @@ import {
   BufferGeometry,
   Group,
   Line,
-  LineBasicMaterial,
-  Mesh,
-  MeshBasicMaterial,
-  RingGeometry,
-  SphereGeometry
+  LineBasicMaterial
 } from 'three';
 import facts from '../data/mission-facts.json';
 import { vec3d } from '../sim/vec3d';
+import { buildJwstModel } from '../render/jwst-model';
 import type { LabelAnchor } from '../render/focal-ruler';
 import type { Act, ActMode, ActServices } from './act';
 
@@ -28,6 +25,8 @@ const JWST_M = facts.problem.jwstApertureM;
 const APERTURE_KM = facts.problem.requiredApertureKm;
 const RING_RADIUS = ((APERTURE_KM * 1000) / JWST_M) / 2;
 const TOUR_DURATION_S = 60;
+const WARPS = [0.5, 1, 2, 4];
+const JWST_IMG = `${import.meta.env.BASE_URL}assets/renders/jwst.jpg`;
 
 export class Act0Problem implements Act {
   readonly id = 0;
@@ -35,16 +34,16 @@ export class Act0Problem implements Act {
   readonly question = 'Why can JWST not do this?';
 
   private readonly group = new Group();
-  private readonly jwst = new Group();
+  private readonly jwst = buildJwstModel();
   private readonly ring: Line;
   private readonly inset: HTMLElement;
   private readonly anchors: LabelAnchor[];
   private mode: ActMode = 'tour';
+  private warpIndex = 1;
   private lastCaption = -1;
   private endShown = false;
 
   constructor(private readonly s: ActServices) {
-    this.buildJwst();
     this.group.add(this.jwst);
 
     // 90 km aperture as a ghosted ring, concentric with the JWST mirror.
@@ -79,29 +78,6 @@ export class Act0Problem implements Act {
       <div class="contrast-note">A coronagraph suppresses about 1e6 of the glare. The gravitational lens amplifies the planet about 1e11 instead.</div>`;
   }
 
-  private buildJwst(): void {
-    const gold = new MeshBasicMaterial({ color: 0xd9a441 });
-    // 18-segment primary approximated as a hex ring of small spheres.
-    for (let i = 0; i < 18; i++) {
-      const a = (i / 18) * Math.PI * 2;
-      const r = 0.9 + (i % 2) * 0.1;
-      const seg = new Mesh(new SphereGeometry(0.16, 8, 6), gold);
-      seg.position.set(Math.cos(a) * r, Math.sin(a) * r, 0);
-      this.jwst.add(seg);
-    }
-    const hub = new Mesh(new SphereGeometry(0.4, 12, 10), gold);
-    this.jwst.add(hub);
-    // Sunshield as a thin skewed plate behind the mirror.
-    const shield = new Mesh(
-      new RingGeometry(0, 2.6, 4),
-      new MeshBasicMaterial({ color: 0x3a3f4a, transparent: true, opacity: 0.5 })
-    );
-    shield.position.z = -1.2;
-    shield.rotation.z = Math.PI / 4;
-    shield.scale.set(1.4, 1, 1);
-    this.jwst.add(shield);
-  }
-
   enter(mode: ActMode): void {
     this.s.scene.add(this.group);
     this.s.origin.setOrigin(vec3d(0, 0, 0));
@@ -110,11 +86,12 @@ export class Act0Problem implements Act {
     this.s.setSunVisible(false);
     this.s.setActHeading(`ACT 0 / ${this.title}`, this.question);
     this.s.timeline.reset();
-    this.s.timeline.setWarp(1);
+    this.s.timeline.setWarp(WARPS[this.warpIndex] ?? 1);
     this.lastCaption = -1;
     this.endShown = false;
     (this.s.hud.el.parentElement ?? document.body).appendChild(this.inset);
     this.s.labels.setAnchors(this.anchors);
+    this.s.loupe.show(JWST_IMG, 'JAMES WEBB SPACE TELESCOPE', '6.5 m mirror, actual NASA render');
     this.setMode(mode);
   }
 
@@ -194,7 +171,7 @@ export class Act0Problem implements Act {
     this.s.ribbon.set({ mapLabel: 'TRUE SCALE, JWST : 90 KM', compression: 1, trueDistanceAU: 1 });
     this.s.timeControls.set({
       paused: this.s.timeline.paused,
-      warpLabel: '1X',
+      warpLabel: `${WARPS[this.warpIndex] ?? 1}X`,
       progress: this.mode === 'tour' ? this.progress() : null
     });
   }
@@ -215,7 +192,8 @@ export class Act0Problem implements Act {
   }
 
   onWarpCycle(): void {
-    // No warp in Act 0.
+    this.warpIndex = (this.warpIndex + 1) % WARPS.length;
+    this.s.timeline.setWarp(WARPS[this.warpIndex] ?? 1);
   }
 
   onScrub(progress: number): void {
@@ -234,5 +212,6 @@ export class Act0Problem implements Act {
     this.inset.remove();
     this.s.labels.setAnchors([]);
     this.s.captions.clear();
+    this.s.loupe.hide();
   }
 }

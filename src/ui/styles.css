@@ -689,10 +689,88 @@ input[type='range']:focus-visible {
   outline-offset: 2px;
 }
 
+/* Spacecraft loupe: a circular magnifier for real NASA renders. */
+.loupe {
+  position: absolute;
+  left: 180px;
+  top: 88px;
+  width: clamp(150px, 17vw, 214px);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.loupe.visible {
+  opacity: 1;
+  transform: none;
+}
+
+.loupe-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #05070c;
+  border: 2px solid rgba(255, 176, 0, 0.55);
+  box-shadow: 0 6px 26px rgba(0, 0, 0, 0.6), 0 0 0 4px rgba(255, 176, 0, 0.07);
+}
+
+.loupe-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Reticle plus edge vignette: reads as a magnifier trained on the craft. */
+.loupe-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 34px rgba(0, 0, 0, 0.75);
+  background:
+    linear-gradient(rgba(255, 176, 0, 0.35), rgba(255, 176, 0, 0.35)) center / 1px 22px no-repeat,
+    linear-gradient(rgba(255, 176, 0, 0.35), rgba(255, 176, 0, 0.35)) center / 22px 1px no-repeat;
+  pointer-events: none;
+}
+
+.loupe-label {
+  margin-top: 8px;
+  text-align: center;
+}
+
+.loupe-label b {
+  display: block;
+  color: var(--accent);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  font-weight: normal;
+}
+
+.loupe-label span {
+  display: block;
+  color: var(--text-dim);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  margin-top: 3px;
+}
+
+@media (max-width: 900px) {
+  .loupe {
+    left: 12px;
+    top: 66px;
+    width: clamp(116px, 30vw, 168px);
+  }
+}
+
 /* Respect reduced-motion for the DOM chrome transitions. The 3D tour is the
    content itself and is user-controlled (pause / scrub). */
 @media (prefers-reduced-motion: reduce) {
   .captions,
+  .loupe,
   .ui button,
   .credits-source a {
     transition: none;

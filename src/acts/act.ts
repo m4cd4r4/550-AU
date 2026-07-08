@@ -6,6 +6,7 @@ import type { Captions } from '../ui/captions';
 import type { Hud } from '../ui/hud';
 import type { Inspector } from '../ui/inspector';
 import type { LabelLayer } from '../ui/labels';
+import type { Loupe } from '../ui/loupe';
 import type { ScaleRibbon } from '../ui/scale-ribbon';
 import type { TimeControls } from '../ui/time-controls';
 
@@ -24,6 +25,7 @@ export interface ActServices {
   labels: LabelLayer;
   inspector: Inspector;
   timeControls: TimeControls;
+  loupe: Loupe;
   setActHeading: (name: string, question: string) => void;
   // Per-act bloom strength; the app default is 0.85. Acts that raise or
   // lower it must restore the default in exit().
