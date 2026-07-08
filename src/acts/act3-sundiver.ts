@@ -152,12 +152,14 @@ export class Act3Sundiver implements Act {
     if (side.lengthSq() < 0.5) side.set(1, 0, 0);
     const lift = this.liftV3.crossVectors(side, sunDir).normalize();
 
-    const wobble = 0.8 + 0.7 * p;
+    // A gentle drift keeps the shot alive without swinging the trajectory
+    // line around the craft; the earlier amplitude read as a wobble.
+    const wobble = 0.8 + 0.4 * p;
     this.s.camera.position
       .copy(sunDir)
       .multiplyScalar(-0.8)
-      .addScaledVector(side, 0.55 * Math.cos(wobble))
-      .addScaledVector(lift, 0.3 + 0.15 * Math.sin(wobble * 1.7))
+      .addScaledVector(side, 0.16 * Math.cos(wobble))
+      .addScaledVector(lift, 0.28 + 0.05 * Math.sin(wobble * 1.3))
       .normalize()
       .multiplyScalar(dist);
 
