@@ -4,7 +4,7 @@
 // camera; click a pearl to inspect the six-CubeSat cluster and the
 // assembled telescope; click again to toggle the exploded view.
 
-import { Mesh, MeshBasicMaterial, SphereGeometry, Vector3 } from 'three';
+import { Mesh, Vector3 } from 'three';
 import facts from '../data/mission-facts.json';
 import targetsData from '../data/targets.json';
 import { compressedMap, mapPosition } from '../render/distance-map';
@@ -13,6 +13,7 @@ import { eclipticToScene, focalLineDirScene } from '../render/frames';
 import { LaserRelay } from '../render/laser-relay';
 import { CUBESAT_ROLES, PearlModel } from '../render/pearl-models';
 import { PearlString } from '../render/pearl-string';
+import { planetMesh } from '../render/planet-textures';
 import { PLANETS, planetPositionAU } from '../sim/orbits';
 import { pearlStringAt, cruiseSpacingAU, type PearlState } from '../sim/pearls';
 import { integrateSundiver } from '../sim/sundiver';
@@ -70,10 +71,7 @@ export class Act4Pearls implements Act {
 
   constructor(private readonly s: ActServices) {
     this.dirV3 = new Vector3(this.dir.x, this.dir.y, this.dir.z);
-    this.earthMarker = new Mesh(
-      new SphereGeometry(1, 16, 12),
-      new MeshBasicMaterial({ color: 0x6fa8ff })
-    );
+    this.earthMarker = planetMesh('Earth');
     this.detail.group.visible = false;
   }
 
