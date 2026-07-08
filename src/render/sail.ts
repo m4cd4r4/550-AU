@@ -5,12 +5,14 @@
 
 import {
   BoxGeometry,
+  ConeGeometry,
   CylinderGeometry,
   DoubleSide,
   Group,
   Mesh,
   MeshBasicMaterial,
-  PlaneGeometry
+  PlaneGeometry,
+  TorusGeometry
 } from 'three';
 import facts from '../data/mission-facts.json';
 
@@ -32,9 +34,7 @@ export class SailCraft {
   private jettisonDrift = 0;
 
   constructor() {
-    const busMaterial = new MeshBasicMaterial({ color: 0x9aa4b0 });
-    const bus = new Mesh(new BoxGeometry(3, 3, 5), busMaterial);
-    this.group.add(bus);
+    this.group.add(this.buildBus());
 
     this.trussMaterial = new MeshBasicMaterial({ color: 0x6f7a86, transparent: true });
     const truss = new Mesh(
@@ -64,6 +64,41 @@ export class SailCraft {
     }
     this.group.add(this.sailAssembly);
     this.setDeployment(0);
+  }
+
+  // The payload left behind after the sail is jettisoned: a small telescope
+  // spacecraft (the same craft that goes on to fly as a pearl). Metres.
+  private buildBus(): Group {
+    const bus = new Group();
+    const mat = (c: number): MeshBasicMaterial => new MeshBasicMaterial({ color: c });
+    const alongZ = (m: Mesh): void => {
+      m.rotation.x = Math.PI / 2;
+    };
+
+    const body = new Mesh(new CylinderGeometry(1.5, 1.8, 3, 8), mat(0x8a94a2));
+    alongZ(body);
+    const foil = new Mesh(new CylinderGeometry(1.55, 1.55, 0.7, 8), mat(0xd9a441));
+    alongZ(foil);
+    foil.position.z = -0.9;
+    const tube = new Mesh(new CylinderGeometry(1.25, 1.25, 3.2, 16), mat(0xaab2bd));
+    alongZ(tube);
+    tube.position.z = 2.6;
+    const ring = new Mesh(new TorusGeometry(1.25, 0.12, 8, 28), mat(0xcfd5dc));
+    ring.position.z = 4.2;
+    const shade = new Mesh(new ConeGeometry(1.7, 1.2, 20, 1, true), mat(0x6f7a86));
+    shade.rotation.x = -Math.PI / 2;
+    shade.position.z = 4.9;
+    // High-gain dish on a short boom, and a radiator fin on the far side.
+    const boom = new Mesh(new CylinderGeometry(0.07, 0.07, 2.2, 6), mat(0x6f7a86));
+    boom.rotation.z = Math.PI / 2;
+    boom.position.set(2, 0, -0.8);
+    const dish = new Mesh(new ConeGeometry(1, 0.45, 20, 1, true), mat(0xc4c9cf));
+    dish.rotation.z = Math.PI / 2 + 0.5;
+    dish.position.set(3.2, 0, -0.8);
+    const fin = new Mesh(new BoxGeometry(0.1, 2.6, 2), mat(0xff8f66));
+    fin.position.set(-1.8, 0, -0.4);
+    bus.add(body, foil, tube, ring, shade, boom, dish, fin);
+    return bus;
   }
 
   // 0 = stowed, 1 = fully deployed. Panels unfurl outward along the truss.
