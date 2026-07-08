@@ -1,7 +1,10 @@
-// Global mission clock. Time is double seconds since act start; each act
-// sets its own default warp (simulated seconds per real second).
+// Global mission clock. Time is double seconds since act start. Warp
+// (simulated seconds per real second) is a shared, persistent playback speed:
+// it survives act switches, so auto-advance and chapter jumps keep the pace
+// the viewer last chose. reset() deliberately leaves it alone.
 
 export class Timeline {
+  private static readonly WARPS = [0.5, 1, 2, 4];
   private tS = 0;
   private warpFactor = 1;
   private isPaused = false;
@@ -26,6 +29,16 @@ export class Timeline {
 
   setWarp(simSecondsPerRealSecond: number): void {
     this.warpFactor = simSecondsPerRealSecond;
+  }
+
+  get warpLabel(): string {
+    return `${this.warpFactor}X`;
+  }
+
+  // Step to the next playback speed, wrapping. Persists across acts.
+  cycleWarp(): void {
+    const i = Timeline.WARPS.indexOf(this.warpFactor);
+    this.warpFactor = Timeline.WARPS[(i + 1) % Timeline.WARPS.length] ?? 1;
   }
 
   get paused(): boolean {

@@ -23,7 +23,6 @@ import type { Act, ActMode, ActServices } from './act';
 import { buildCaptions, END_CAPTION, TOUR_DURATION_S, tourYears, voyagerLoupeAt } from './act4-tour';
 
 const COMPRESSION_D0_AU = 2;
-const WARPS = [0.5, 1, 2, 4];
 const EARTH = PLANETS.find((p) => p.name === 'Earth');
 const VOYAGER_IMG = `${import.meta.env.BASE_URL}assets/renders/voyager.jpg`;
 
@@ -49,7 +48,6 @@ export class Act4Pearls implements Act {
   private readonly daysSinceJ2000 = (Date.now() - Date.UTC(2000, 0, 1, 12)) / 86400000;
 
   private mode: ActMode = 'tour';
-  private warpIndex = 1;
   private missionYears = 0;
   private lastComputedYears = -1;
   private lastCaptionYears = -1;
@@ -83,7 +81,6 @@ export class Act4Pearls implements Act {
     this.s.scene.add(this.string.group, this.relay.group, this.detail.group, this.earthMarker);
     this.s.setActHeading(`ACT 4 / ${this.title}`, this.question);
     this.s.timeline.reset();
-    this.s.timeline.setWarp(WARPS[this.warpIndex] ?? 1);
     this.s.renderer.domElement.addEventListener('click', this.onClickBound);
     this.lastCaptionYears = -1;
     this.lastComputedYears = -1;
@@ -305,7 +302,7 @@ export class Act4Pearls implements Act {
     });
     this.s.timeControls.set({
       paused: this.s.timeline.paused,
-      warpLabel: `${WARPS[this.warpIndex] ?? 1}X`,
+      warpLabel: this.s.timeline.warpLabel,
       progress: this.mode === 'tour' ? this.progress() : null
     });
   }
@@ -325,8 +322,7 @@ export class Act4Pearls implements Act {
   }
 
   onWarpCycle(): void {
-    this.warpIndex = (this.warpIndex + 1) % WARPS.length;
-    this.s.timeline.setWarp(WARPS[this.warpIndex] ?? 1);
+    this.s.timeline.cycleWarp();
   }
 
   onScrub(progress: number): void {

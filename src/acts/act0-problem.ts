@@ -25,7 +25,6 @@ const JWST_M = facts.problem.jwstApertureM;
 const APERTURE_KM = facts.problem.requiredApertureKm;
 const RING_RADIUS = ((APERTURE_KM * 1000) / JWST_M) / 2;
 const TOUR_DURATION_S = 60;
-const WARPS = [0.5, 1, 2, 4];
 const JWST_IMG = `${import.meta.env.BASE_URL}assets/renders/jwst.jpg`;
 
 export class Act0Problem implements Act {
@@ -39,7 +38,6 @@ export class Act0Problem implements Act {
   private readonly inset: HTMLElement;
   private readonly anchors: LabelAnchor[];
   private mode: ActMode = 'tour';
-  private warpIndex = 1;
   private lastCaption = -1;
   private endShown = false;
 
@@ -86,7 +84,6 @@ export class Act0Problem implements Act {
     this.s.setSunVisible(false);
     this.s.setActHeading(`ACT 0 / ${this.title}`, this.question);
     this.s.timeline.reset();
-    this.s.timeline.setWarp(WARPS[this.warpIndex] ?? 1);
     this.lastCaption = -1;
     this.endShown = false;
     (this.s.hud.el.parentElement ?? document.body).appendChild(this.inset);
@@ -171,7 +168,7 @@ export class Act0Problem implements Act {
     this.s.ribbon.set({ mapLabel: 'TRUE SCALE, JWST : 90 KM', compression: 1, trueDistanceAU: 1 });
     this.s.timeControls.set({
       paused: this.s.timeline.paused,
-      warpLabel: `${WARPS[this.warpIndex] ?? 1}X`,
+      warpLabel: this.s.timeline.warpLabel,
       progress: this.mode === 'tour' ? this.progress() : null
     });
   }
@@ -192,8 +189,7 @@ export class Act0Problem implements Act {
   }
 
   onWarpCycle(): void {
-    this.warpIndex = (this.warpIndex + 1) % WARPS.length;
-    this.s.timeline.setWarp(WARPS[this.warpIndex] ?? 1);
+    this.s.timeline.cycleWarp();
   }
 
   onScrub(progress: number): void {

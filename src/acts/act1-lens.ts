@@ -31,7 +31,6 @@ const X_END = 6.6; // and continue past the crossing to here
 const XC0 = 1.9; // crossing x for a limb-grazing ray
 const XC1 = 1.35; // crossing x gained per (z/z_min - 1)
 const TOUR_DURATION_S = 82;
-const WARPS = [0.5, 1, 2, 4];
 
 function crossingX(bOverRsun: number): number {
   const zRatio = bOverRsun * bOverRsun; // z = b^2 z(R_sun)
@@ -51,7 +50,6 @@ export class Act1Lens implements Act {
   private readonly axis: Line;
   private readonly anchors: LabelAnchor[];
   private mode: ActMode = 'tour';
-  private warpIndex = 1;
   private revealed = 0;
   private lastCaptionIndex = -1;
   private endShown = false;
@@ -106,7 +104,6 @@ export class Act1Lens implements Act {
     this.s.origin.setOrigin(vec3d(0, 0, 0));
     this.s.setActHeading(`ACT 1 / ${this.title}`, this.question);
     this.s.timeline.reset();
-    this.s.timeline.setWarp(WARPS[this.warpIndex] ?? 1);
     this.revealed = 0;
     this.lastCaptionIndex = -1;
     this.endShown = false;
@@ -236,7 +233,7 @@ export class Act1Lens implements Act {
     this.s.ribbon.set({ mapLabel: 'SCHEMATIC', compression: 1, trueDistanceAU: mToAu(focalDistanceM(b)) });
     this.s.timeControls.set({
       paused: this.s.timeline.paused,
-      warpLabel: `${WARPS[this.warpIndex] ?? 1}X`,
+      warpLabel: this.s.timeline.warpLabel,
       progress: this.mode === 'tour' ? this.progress() : null
     });
   }
@@ -264,8 +261,7 @@ export class Act1Lens implements Act {
   }
 
   onWarpCycle(): void {
-    this.warpIndex = (this.warpIndex + 1) % WARPS.length;
-    this.s.timeline.setWarp(WARPS[this.warpIndex] ?? 1);
+    this.s.timeline.cycleWarp();
   }
 
   onScrub(progress: number): void {
