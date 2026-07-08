@@ -62,8 +62,9 @@ between them; global controls pause, scrub, and time-warp.
   parameter grows. The deflection is dramatised; alpha(b) and z(b) on
   the HUD are the true values.
 - **Act 2 - The Focal Line.** A story-paced pullback from the Sun to the
-  gravitational focus along a compressed ruler, with planet orbits, the
-  Kuiper belt, the heliopause, Voyager 1, and the two lens milestones.
+  gravitational focus along a compressed ruler, with the planets on their
+  orbits as real textured surfaces, the Kuiper belt, the heliopause,
+  Voyager 1, and the two lens milestones.
 - **Act 3 - The Sundiver.** The integrated trajectory: sail deployment,
   perihelion slingshot at 0.1 AU, jettison at year 2, and a speed race
   against Voyager 1 and chemical propulsion.

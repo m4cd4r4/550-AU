@@ -24,6 +24,7 @@ import { PLANETS, orbitPathAU, planetPositionAU } from '../sim/orbits';
 import { vec3d, scale as scaleVec, copy, type Vec3d } from '../sim/vec3d';
 import { mapPosition, type DistanceMap } from './distance-map';
 import { eclipticToScene } from './frames';
+import { planetMesh } from './planet-textures';
 import type { OriginFrame } from './floating-origin';
 
 export interface Milestone {
@@ -145,13 +146,10 @@ export class FocalRuler {
       });
       this.dynamic.add(new LineLoop(new BufferGeometry().setFromPoints(path), material));
 
-      const dot = new Mesh(
-        new OctahedronGeometry(1, 1),
-        new MeshBasicMaterial({ color: 0xd7dee6 })
-      );
+      const dot = planetMesh(planet.name);
       this.dynamic.add(dot);
       this.planetDots.set(planet.name, dot);
-      this.markers.push({ mesh: dot, baseScale: 0.0035 });
+      this.markers.push({ mesh: dot, baseScale: 0.013 });
       this.anchors.push({ text: planet.name, displayPos: vec3d(), accent: false });
       this.clicks.push({ object: dot, title: planet.name, rows: [] });
     }
