@@ -5,6 +5,7 @@
 // flagged as beyond current engineering. No new physics below the visuals.
 
 import {
+  AdditiveBlending,
   Group,
   Mesh,
   MeshBasicMaterial,
@@ -12,9 +13,11 @@ import {
   LineBasicMaterial,
   BufferGeometry,
   BufferAttribute,
+  PlaneGeometry,
   SphereGeometry,
-  RingGeometry,
   DoubleSide,
+  type Texture,
+  TextureLoader,
   Vector3
 } from 'three';
 import facts from '../data/mission-facts.json';
@@ -42,6 +45,7 @@ export class Act7Epilogue implements Act {
   private readonly alphaPos: Vec3d;
   private readonly link: Line;
   private readonly sgrA = new Group();
+  private sgrATexture: Texture | null = null;
   private readonly card: HTMLElement;
   private readonly anchors: LabelAnchor[];
   private mode: ActMode = 'tour';
@@ -81,17 +85,29 @@ export class Act7Epilogue implements Act {
   }
 
   private buildSgrA(): void {
-    // A black disc with a thin hot accretion ring: no photosphere, no corona.
-    const hole = new Mesh(
-      new SphereGeometry(0.6, 32, 24),
-      new MeshBasicMaterial({ color: 0x000000 })
-    );
-    const ring = new Mesh(
-      new RingGeometry(0.62, 1.05, 64),
-      new MeshBasicMaterial({ color: 0xffa64d, transparent: true, opacity: 0.55, side: DoubleSide })
-    );
-    ring.rotation.x = Math.PI / 2.6;
-    this.sgrA.add(hole, ring);
+    // The real thing: the Event Horizon Telescope image of Sagittarius A*
+    // (2022), the black hole this thought experiment is about. Drawn as a
+    // camera-facing billboard with additive blending so the dark background
+    // drops into space and only the hot ring glows. Faces +z; the act aims
+    // it at the camera each frame and slowly rotates the disc.
+    const mat = new MeshBasicMaterial({
+      color: 0x000000,
+      transparent: true,
+      depthWrite: false,
+      blending: AdditiveBlending,
+      side: DoubleSide
+    });
+    new TextureLoader().load(`${import.meta.env.BASE_URL}assets/renders/sgra.jpg`, (tex) => {
+      tex.center.set(0.5, 0.5);
+      this.sgrATexture = tex;
+      mat.map = tex;
+      // Dim below the bloom threshold so the hot ring glows gently instead of
+      // blowing out and erasing the dark central shadow.
+      mat.color.setHex(0x707070);
+      mat.needsUpdate = true;
+    });
+    const disc = new Mesh(new PlaneGeometry(3, 3), mat);
+    this.sgrA.add(disc);
     this.sgrA.position.set(0, 0, -4);
     this.sgrA.visible = false;
   }
@@ -170,7 +186,9 @@ export class Act7Epilogue implements Act {
         Math.max(1, this.scratchV3.copy(this.alphaCen.position).distanceTo(this.s.camera.position) * 0.02)
       );
     } else {
-      this.sgrA.rotation.y += dtRealS * 0.1;
+      // Keep the disc face-on to the camera and let the accretion ring turn.
+      this.sgrA.lookAt(this.s.camera.position);
+      if (this.sgrATexture) this.sgrATexture.rotation += dtRealS * 0.04;
     }
     this.updateHud();
   }

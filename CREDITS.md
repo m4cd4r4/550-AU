@@ -28,6 +28,7 @@ against the primary sources below before use.
 | Corona backdrop (LASCO C2 coronagraph frame, 2026-07-05) | `public/assets/textures/corona-lasco-c2.jpg` | [SOHO LASCO](https://soho.nascom.nasa.gov/) - courtesy of SOHO/LASCO consortium. SOHO is a project of international cooperation between ESA and NASA | Free for educational and personal use with credit ([SOHO image use policy](https://soho.nascom.nasa.gov/data/data.html)); not copyrighted. The app blends it with an original procedural inner corona below the LASCO occulter edge |
 | JWST primary mirror render (Act 0 loupe) | `public/assets/renders/jwst.jpg` | ["JWST's Golden Mirror Revealed"](https://images.nasa.gov/details/GSFC_20171208_Archive_e000368), NASA/Chris Gunn (NASA Goddard) | Public domain (NASA imagery); shown in the loupe beside the 3D model |
 | Voyager spacecraft render (Act 4 loupe) | `public/assets/renders/voyager.jpg` | ["Voyager in Space Artist Concept" PIA17049](https://images.nasa.gov/details/PIA17049), NASA/JPL-Caltech | Public domain (NASA/JPL imagery). Shown for both Voyager 1 and 2, which are identical craft |
+| Sagittarius A* black hole image (Act 7) | `public/assets/renders/sgra.jpg` | [Event Horizon Telescope image of Sgr A*, eso2208](https://www.eso.org/public/images/eso2208-eht-mwa/), EHT Collaboration / ESO | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) - attribution required. The actual black hole this act's thought experiment is about; drawn as an additive-blended camera-facing billboard |
 
 ## 3D models
 
