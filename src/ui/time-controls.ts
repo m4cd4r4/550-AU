@@ -12,6 +12,13 @@ export class TimeControls {
   private warp: HTMLButtonElement;
   private scrub: HTMLInputElement;
   private scrubbing = false;
+  private lastProgress: number | null = null;
+
+  // The tour progress the current act last reported (null in Explore). Used by
+  // the auto-advance controller to know when an act's tour has finished.
+  get tourProgress(): number | null {
+    return this.lastProgress;
+  }
 
   constructor(
     parent: HTMLElement,
@@ -50,6 +57,7 @@ export class TimeControls {
   }
 
   set(state: TimeControlState): void {
+    this.lastProgress = state.progress;
     const playLabel = state.paused ? 'PLAY' : 'PAUSE';
     if (this.playPause.textContent !== playLabel) this.playPause.textContent = playLabel;
     if (this.warp.textContent !== state.warpLabel) this.warp.textContent = state.warpLabel;

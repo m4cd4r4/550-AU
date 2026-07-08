@@ -29,16 +29,20 @@ interface TargetView {
   distanceLy: number;
   blurb: string;
   starPos: Vec3d; // compressed scene position
+  starDir: Vec3d; // unit, toward the target
   focalDir: Vec3d; // unit, anti-target
   starMesh: Mesh;
+  starMaterial: MeshBasicMaterial;
   pearls: Mesh[];
   focalLine: Line;
+  sightLine: Line; // star through the Sun: makes the collinearity explicit
 }
 
 const PRIMARY = new Set(['proxima-b', 'trappist-1', 'gj-273b']);
 const FOCAL_LEN = 1.6; // exaggerated focal-line length in scene units
 const PEARLS_PER_LINE = 5;
 const TOUR_DURATION_S = 78;
+const WARPS = [0.5, 1, 2, 4];
 
 // Compress light-years to a readable scene radius (log, so 4 ly and 40 ly
 // both fit while keeping their order).
@@ -55,9 +59,14 @@ export class Act6Worlds implements Act {
   private readonly targets: TargetView[] = [];
   private readonly anchors: LabelAnchor[] = [];
   private mode: ActMode = 'tour';
+  private warpIndex = 1;
   private focusIndex = -1;
   private lastFocus = -1;
   private readonly scratchV3 = new Vector3();
+  private readonly vDir = new Vector3();
+  private readonly vPerp = new Vector3();
+  private readonly vUp2 = new Vector3();
+  private readonly vLook = new Vector3();
   private readonly onClickBound = (event: MouseEvent) => this.onClick(event);
 
   constructor(private readonly s: ActServices) {
@@ -72,12 +81,20 @@ export class Act6Worlds implements Act {
     const starPos = scaleVec(vec3d(), dir, sceneRadius(t.distanceLy));
     const focalDir = focalLineDirScene(t.raDeg, t.decDeg);
 
-    const starMesh = new Mesh(
-      new SphereGeometry(0.09, 16, 12),
-      new MeshBasicMaterial({ color: 0xffd27a })
-    );
+    const starMaterial = new MeshBasicMaterial({ color: 0xffd27a });
+    const starMesh = new Mesh(new SphereGeometry(0.09, 16, 12), starMaterial);
     starMesh.position.set(starPos.x, starPos.y, starPos.z);
     this.group.add(starMesh);
+
+    // Sight line from the star through the Sun (origin): the axis the focal
+    // line continues. Drawn dim, brightened for the focused target so the
+    // star, Sun and pearls visibly form one straight line.
+    const sightLine = new Line(
+      lineGeometry([starPos.x, starPos.y, starPos.z, 0, 0, 0]),
+      new LineBasicMaterial({ color: 0x2b3442, transparent: true, opacity: 0.35 })
+    );
+    sightLine.frustumCulled = false;
+    this.group.add(sightLine);
 
     // Focal line from the Sun (origin) going anti-target.
     const end = scaleVec(vec3d(), focalDir, FOCAL_LEN);
@@ -108,10 +125,13 @@ export class Act6Worlds implements Act {
       distanceLy: t.distanceLy,
       blurb: t.blurb,
       starPos,
+      starDir: dir,
       focalDir,
       starMesh,
+      starMaterial,
       pearls,
-      focalLine
+      focalLine,
+      sightLine
     };
   }
 
@@ -120,7 +140,7 @@ export class Act6Worlds implements Act {
     this.s.origin.setOrigin(vec3d(0, 0, 0));
     this.s.setActHeading(`ACT 6 / ${this.title}`, this.question);
     this.s.timeline.reset();
-    this.s.timeline.setWarp(1);
+    this.s.timeline.setWarp(WARPS[this.warpIndex] ?? 1);
     this.s.renderer.domElement.addEventListener('click', this.onClickBound);
     this.s.labels.setAnchors(this.anchors);
     this.focusIndex = -1;
@@ -137,6 +157,9 @@ export class Act6Worlds implements Act {
       this.s.controls.target.set(0, 0, 0);
       this.s.camera.position.set(4, 3, 7);
       this.s.inspector.hide();
+      this.focusIndex = -1;
+      this.lastFocus = -1;
+      this.highlightFocus();
     } else {
       this.s.captions.clear();
     }
@@ -164,12 +187,17 @@ export class Act6Worlds implements Act {
   }
 
   private highlightFocus(): void {
+    const anyFocus = this.focusIndex >= 0;
     for (let i = 0; i < this.targets.length; i++) {
       const t = this.targets[i];
       if (!t) continue;
       const on = i === this.focusIndex;
       (t.focalLine.material as LineBasicMaterial).opacity = on ? 0.95 : 0.4;
       (t.focalLine.material as LineBasicMaterial).color.setHex(on ? 0xffb000 : 0x3d4a5a);
+      const sight = t.sightLine.material as LineBasicMaterial;
+      sight.opacity = on ? 0.75 : 0.16;
+      sight.color.setHex(on ? 0xffb000 : 0x2b3442);
+      t.starMaterial.color.setHex(on ? 0xfff0c4 : anyFocus ? 0x8f8360 : 0xffd27a);
       for (const pearl of t.pearls) {
         (pearl.material as MeshBasicMaterial).color.setHex(on ? 0xffd24d : 0xaab4c0);
       }
@@ -189,15 +217,36 @@ export class Act6Worlds implements Act {
 
   private placeTourCamera(p: number): void {
     const focus = this.targets[this.focusIndex];
-    // Orbit the neighbourhood, drifting the look toward the focused target.
-    const angle = 0.4 + p * 2.4;
-    const dist = 8.5;
-    this.s.camera.position.set(Math.sin(angle) * dist, 2.5 + Math.sin(p * 3) * 1.2, Math.cos(angle) * dist);
-    if (focus) {
-      this.s.camera.lookAt(focus.starPos.x * 0.4, focus.starPos.y * 0.4, focus.starPos.z * 0.4);
-    } else {
+    if (!focus) {
+      this.s.camera.position.set(4, 3, 7);
       this.s.camera.lookAt(0, 0, 0);
+      return;
     }
+    // View the focused target's axis edge-on so the star, the Sun and the
+    // focal-line pearls read as one straight line. The camera sits on a
+    // plane perpendicular to the star direction and slowly swings within it.
+    const n = this.targets.length;
+    const q = Math.min(1, Math.max(0, p * n - this.focusIndex));
+    const radius = Math.hypot(focus.starPos.x, focus.starPos.y, focus.starPos.z);
+
+    this.vDir.set(focus.starDir.x, focus.starDir.y, focus.starDir.z).normalize();
+    this.vPerp.crossVectors(this.vDir, this.s.camera.up);
+    if (this.vPerp.lengthSq() < 1e-4) this.vPerp.set(1, 0, 0);
+    this.vPerp.normalize();
+    this.vUp2.crossVectors(this.vPerp, this.vDir).normalize();
+
+    // Look at a point biased toward the star so the distant star stays framed.
+    this.vLook.copy(this.vDir).multiplyScalar(radius * 0.28);
+    const span = radius + FOCAL_LEN;
+    const dist = span * 1.05 + 1.6;
+    const swing = (q - 0.5) * 1.1; // slow rotation about the axis
+    const rise = 0.22 + 0.12 * Math.sin(q * Math.PI);
+
+    this.s.camera.position
+      .copy(this.vLook)
+      .addScaledVector(this.vPerp, Math.cos(swing) * dist)
+      .addScaledVector(this.vUp2, Math.sin(swing) * dist * 0.35 + rise * dist);
+    this.s.camera.lookAt(this.vLook);
   }
 
   private showCard(index: number): void {
@@ -237,7 +286,7 @@ export class Act6Worlds implements Act {
     });
     this.s.timeControls.set({
       paused: this.s.timeline.paused,
-      warpLabel: '1X',
+      warpLabel: `${WARPS[this.warpIndex] ?? 1}X`,
       progress: this.mode === 'tour' ? this.progress() : null
     });
   }
@@ -256,7 +305,8 @@ export class Act6Worlds implements Act {
   }
 
   onWarpCycle(): void {
-    // No warp in Act 6.
+    this.warpIndex = (this.warpIndex + 1) % WARPS.length;
+    this.s.timeline.setWarp(WARPS[this.warpIndex] ?? 1);
   }
 
   onScrub(progress: number): void {

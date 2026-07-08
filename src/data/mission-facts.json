@@ -58,6 +58,11 @@
     "distanceAU": 169,
     "yearsInFlight": 49
   },
+  "voyager2": {
+    "speedAUYr": 3.3,
+    "distanceAU": 141,
+    "yearsInFlight": 49
+  },
   "pearls": {
     "launchesPerYear": 1,
     "spacingAU": 25,

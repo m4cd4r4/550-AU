@@ -25,6 +25,12 @@ const CORONA_URLS = [
   'https://soho.esac.esa.int/data/realtime/c2/1024/latest.jpg'
 ];
 
+// NASA public-domain spacecraft renders for the Act 0 and Act 4 loupes.
+const JWST_RENDER_URL =
+  'https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e000368/GSFC_20171208_Archive_e000368~small.jpg';
+const VOYAGER_RENDER_URL =
+  'https://images-assets.nasa.gov/image/PIA17049/PIA17049~small.jpg';
+
 const MAG_LIMIT = 6.5;
 // Catalogue designations of mission targets fainter than the magnitude cut.
 const KEEP_GLIESE = new Set(['Gl 551', 'GJ 551', 'Gl 273', 'GJ 273']);
@@ -151,6 +157,21 @@ async function main() {
   const coronaPath = join(root, 'public', 'assets', 'textures', 'corona-lasco-c2.jpg');
   await writeFile(coronaPath, corona);
   console.log(`[write] ${coronaPath}`);
+
+  const jwst = await downloadFirst([JWST_RENDER_URL], join(cacheDir, 'jwst.jpg'), 'JWST mirror render');
+  const jwstPath = join(root, 'public', 'assets', 'renders', 'jwst.jpg');
+  await mkdir(dirname(jwstPath), { recursive: true });
+  await writeFile(jwstPath, jwst);
+  console.log(`[write] ${jwstPath}`);
+
+  const voyager = await downloadFirst(
+    [VOYAGER_RENDER_URL],
+    join(cacheDir, 'voyager.jpg'),
+    'Voyager spacecraft render'
+  );
+  const voyagerPath = join(root, 'public', 'assets', 'renders', 'voyager.jpg');
+  await writeFile(voyagerPath, voyager);
+  console.log(`[write] ${voyagerPath}`);
 
   console.log('done. Update CREDITS.md if sources changed.');
 }

@@ -42,8 +42,8 @@ spike, a permanent dev harness for the Einstein-ring shader with live
 controls (heliocentric distance, source offset, J2 quadrupole, exposure).
 
 Optional: `npm run fetch-assets` re-downloads and re-trims the bundled
-assets (HYG star subset, Sun texture, LASCO C2 corona frame). The repo
-already includes them.
+assets (HYG star subset, Sun texture, LASCO C2 corona frame, and the NASA
+JWST and Voyager render loupes). The repo already includes them.
 
 ## What it is
 
@@ -84,10 +84,18 @@ the true distance, and Act 2's Explore mode offers a true-scale toggle
 where the solar system shrinks to a dot 550 AU from the focal line. That
 emptiness is the point.
 
-Audio is generative: a slow WebAudio drone that shifts character per act,
-with subtle ticks on chapter changes. No sample files, so the repo stays
-licence-clean. Muted state persists; audio starts only after a user
+Audio is generative: a warm, evolving WebAudio pad, a consonant chord of
+pure-ratio voices with a slow filter drift, a synthetic reverb and sparse
+chord-tone bells. It shifts colour per act. No sample files, so the repo
+stays licence-clean. Muted state persists; audio starts only after a user
 gesture, per browser autoplay policy.
+
+In Tour mode the acts auto-advance: when one act's tour finishes it holds
+briefly, then the show rolls on to the next (looping back at the end).
+Explore mode, a chapter jump or a scrub hand control back. Two acts add a
+circular loupe with a real NASA render (public domain): the James Webb
+telescope in Act 0, and Voyager 1 and 2 in Act 4 as the pearl string
+overtakes them.
 
 ## Physics model and what is dramatised
 
