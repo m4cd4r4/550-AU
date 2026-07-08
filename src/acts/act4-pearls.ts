@@ -256,6 +256,8 @@ export class Act4Pearls implements Act {
     this.detail.group.scale.setScalar(scale);
     const ease = Math.min(1, dtRealS * 3);
     this.detail.setExplode(this.detail.explode + (this.explodeTarget - this.detail.explode) * ease);
+    // The sail is only aboard while the pearl is diving; gone once cruising.
+    this.detail.setSailShown(this.string.pearlAt(this.detailIndex)?.phase === 'diving');
 
     // Role labels track the CubeSats through the explode animation.
     for (let i = 0; i < this.roleAnchors.length; i++) {

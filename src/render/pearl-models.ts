@@ -8,12 +8,15 @@ import {
   BoxGeometry,
   ConeGeometry,
   CylinderGeometry,
+  DoubleSide,
   Group,
   Mesh,
   MeshBasicMaterial,
+  PlaneGeometry,
   TorusGeometry,
   Vector3
 } from 'three';
+import facts from '../data/mission-facts.json';
 
 export interface CubesatRole {
   role: string;
@@ -32,12 +35,17 @@ export const CUBESAT_ROLES: CubesatRole[] = [
 
 const EXPLODE_RADIUS_M = 3.2;
 
+const SAIL_R = 3.4;
+
 export class PearlModel {
   readonly group = new Group();
   private readonly cubesats: Mesh[] = [];
   private readonly telescope = new Group();
   private readonly telescopeMaterials: MeshBasicMaterial[] = [];
+  private readonly sails = new Group();
+  private readonly sailMaterials: { mat: MeshBasicMaterial; base: number }[] = [];
   private explodeF = 0;
+  private sailShown = false;
 
   constructor() {
     // Assembled 1 m telescope: tube, primary ring, sunshade cone, laser
@@ -60,6 +68,7 @@ export class PearlModel {
     fin.position.set(-0.6, 0, -0.4);
     this.telescope.add(tube, ring, shade, terminal, fin);
     this.group.add(this.telescope);
+    this.buildSails();
 
     for (let i = 0; i < CUBESAT_ROLES.length; i++) {
       const cubesat = new Mesh(
@@ -76,6 +85,43 @@ export class PearlModel {
     const m = new MeshBasicMaterial({ color: colour, transparent: true });
     this.telescopeMaterials.push(m);
     return m;
+  }
+
+  private sailMaterial(colour: number, base: number): MeshBasicMaterial {
+    const m = new MeshBasicMaterial({
+      color: colour,
+      transparent: true,
+      opacity: base,
+      side: DoubleSide,
+      depthWrite: false
+    });
+    this.sailMaterials.push({ mat: m, base });
+    return m;
+  }
+
+  // The sundiver's solar sail: 16 panels in two wings of eight on a central
+  // truss, matching Act 3 and the published 16,000 m^2. Shown only while the
+  // pearl is still diving; it is jettisoned before the cruise, so operating
+  // pearls fly bare. Sized for the close-up, not literal scale.
+  private buildSails(): void {
+    const wingPanels = facts.sundiver.sailPanelCount / 2;
+    const panelMat = this.sailMaterial(0xc4c9cf, 0.42);
+    const trussMat = this.sailMaterial(0x6f7a86, 0.7);
+    const truss = new Mesh(new CylinderGeometry(0.02, 0.02, SAIL_R * 2, 6), trussMat);
+    truss.rotation.z = Math.PI / 2;
+    this.sails.add(truss);
+
+    const pw = 0.34;
+    const geo = new PlaneGeometry(pw, 0.55);
+    for (let wing = -1; wing <= 1; wing += 2) {
+      for (let i = 0; i < wingPanels; i++) {
+        const panel = new Mesh(geo, panelMat);
+        panel.position.x = wing * ((i + 0.5) * (pw + 0.05) + 0.25);
+        panel.rotation.x = (i % 2 === 0 ? 1 : -1) * 0.05; // hint of steering
+        this.sails.add(panel);
+      }
+    }
+    this.group.add(this.sails);
   }
 
   // 0 = assembled telescope, 1 = six CubeSats on a ring with the telescope
@@ -97,6 +143,22 @@ export class PearlModel {
     for (const child of this.telescope.children) {
       ((child as Mesh).material as MeshBasicMaterial).opacity = 1 - e * 0.85;
     }
+    this.updateSails();
+  }
+
+  // Show the sail only for a diving pearl; it is gone once cruising. Combined
+  // with the explode state so it also retracts as the craft breaks apart.
+  setSailShown(shown: boolean): void {
+    if (this.sailShown === shown) return;
+    this.sailShown = shown;
+    this.updateSails();
+  }
+
+  private updateSails(): void {
+    const e = this.explodeF * this.explodeF * (3 - 2 * this.explodeF);
+    this.sails.visible = this.sailShown && e < 0.995;
+    const k = this.sailShown ? 1 - e : 0;
+    for (const { mat, base } of this.sailMaterials) mat.opacity = base * k;
   }
 
   get explode(): number {
