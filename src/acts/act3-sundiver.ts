@@ -25,7 +25,6 @@ import {
 } from './act3-tour';
 
 const COMPRESSION_D0_AU = 1.5;
-const WARPS = [0.5, 1, 2, 4];
 const CRAFT_ANGULAR_SIZE = 0.07; // fraction of camera distance the craft spans
 
 export class Act3Sundiver implements Act {
@@ -41,7 +40,6 @@ export class Act3Sundiver implements Act {
   private readonly trail: TrajectoryTrail;
   private chart: RaceChart | null = null;
   private mode: ActMode = 'tour';
-  private warpIndex = 1;
   private lastCaptionT = -1;
   private endShown = false;
   private exaggeration = 1;
@@ -62,7 +60,6 @@ export class Act3Sundiver implements Act {
     this.s.scene.add(this.trail.group, this.craft.group);
     this.s.setActHeading(`ACT 3 / ${this.title}`, this.question);
     this.s.timeline.reset();
-    this.s.timeline.setWarp(WARPS[this.warpIndex] ?? 1);
     this.s.renderer.domElement.addEventListener('click', this.onClickBound);
     this.chart = new RaceChart(this.s.hud.el.parentElement ?? document.body, this.traj.samples);
     this.lastCaptionT = -1;
@@ -210,7 +207,7 @@ export class Act3Sundiver implements Act {
     });
     this.s.timeControls.set({
       paused: this.s.timeline.paused,
-      warpLabel: `${WARPS[this.warpIndex] ?? 1}X`,
+      warpLabel: this.s.timeline.warpLabel,
       progress: this.mode === 'tour' ? this.progress() : null
     });
   }
@@ -230,8 +227,7 @@ export class Act3Sundiver implements Act {
   }
 
   onWarpCycle(): void {
-    this.warpIndex = (this.warpIndex + 1) % WARPS.length;
-    this.s.timeline.setWarp(WARPS[this.warpIndex] ?? 1);
+    this.s.timeline.cycleWarp();
   }
 
   onScrub(progress: number): void {

@@ -34,7 +34,6 @@ import {
 } from './act5-tour';
 
 const Z_AU = facts.lens.usefulImagingStartAU;
-const WARPS = [0.5, 1, 2, 4];
 const KM_TO_SCENE = 1 / 40; // local frame: 40 km per scene unit, declared
 const ACT_BLOOM = 0.4;
 const APP_BLOOM = 0.85;
@@ -55,7 +54,6 @@ export class Act5Imaging implements Act {
   private readonly labelAnchors: LabelAnchor[];
 
   private mode: ActMode = 'tour';
-  private warpIndex = 1;
   private tourT = 0;
   private view: Act5View = 'ring';
   private lastCaptionT = -1;
@@ -107,7 +105,6 @@ export class Act5Imaging implements Act {
     this.s.scene.add(this.lensQuad, this.cylinder.group);
     this.s.setActHeading(`ACT 5 / ${this.title}`, this.question);
     this.s.timeline.reset();
-    this.s.timeline.setWarp(WARPS[this.warpIndex] ?? 1);
     this.s.setBloom(ACT_BLOOM);
     this.s.renderer.domElement.addEventListener('click', this.onClickBound);
     this.recon = new ReconPanel(this.s.hud.el.parentElement ?? document.body, createExoplanetCanvas());
@@ -271,7 +268,7 @@ export class Act5Imaging implements Act {
     });
     this.s.timeControls.set({
       paused: this.s.timeline.paused,
-      warpLabel: `${WARPS[this.warpIndex] ?? 1}X`,
+      warpLabel: this.s.timeline.warpLabel,
       progress: this.mode === 'tour' ? this.progress() : null
     });
   }
@@ -292,8 +289,7 @@ export class Act5Imaging implements Act {
   }
 
   onWarpCycle(): void {
-    this.warpIndex = (this.warpIndex + 1) % WARPS.length;
-    this.s.timeline.setWarp(WARPS[this.warpIndex] ?? 1);
+    this.s.timeline.cycleWarp();
   }
 
   onScrub(progress: number): void {

@@ -30,7 +30,6 @@ const ALPHA_CEN_DEC = -60.834;
 const ALPHA_CEN_DIST = 5.5; // scene units (compressed)
 const SCENE_SWITCH = 0.5;
 const TOUR_DURATION_S = 64;
-const WARPS = [0.5, 1, 2, 4];
 
 export class Act7Epilogue implements Act {
   readonly id = 7;
@@ -46,7 +45,6 @@ export class Act7Epilogue implements Act {
   private readonly card: HTMLElement;
   private readonly anchors: LabelAnchor[];
   private mode: ActMode = 'tour';
-  private warpIndex = 1;
   private scene: 'link' | 'sgra' = 'link';
   private lastCaption = -1;
   private readonly scratchV3 = new Vector3();
@@ -103,7 +101,6 @@ export class Act7Epilogue implements Act {
     this.s.origin.setOrigin(vec3d(0, 0, 0));
     this.s.setActHeading(`ACT 7 / ${this.title}`, this.question);
     this.s.timeline.reset();
-    this.s.timeline.setWarp(WARPS[this.warpIndex] ?? 1);
     this.lastCaption = -1;
     this.relay.setChain([vec3d(0, 0, 0), this.alphaPos]);
     (this.s.hud.el.parentElement ?? document.body).appendChild(this.card);
@@ -230,7 +227,7 @@ export class Act7Epilogue implements Act {
     this.s.ribbon.set({ mapLabel: 'SCHEMATIC', compression: 1, trueDistanceAU: 0 });
     this.s.timeControls.set({
       paused: this.s.timeline.paused,
-      warpLabel: `${WARPS[this.warpIndex] ?? 1}X`,
+      warpLabel: this.s.timeline.warpLabel,
       progress: this.mode === 'tour' ? this.progress() : null
     });
   }
@@ -250,8 +247,7 @@ export class Act7Epilogue implements Act {
   }
 
   onWarpCycle(): void {
-    this.warpIndex = (this.warpIndex + 1) % WARPS.length;
-    this.s.timeline.setWarp(WARPS[this.warpIndex] ?? 1);
+    this.s.timeline.cycleWarp();
   }
 
   onScrub(progress: number): void {

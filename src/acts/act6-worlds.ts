@@ -42,7 +42,6 @@ const PRIMARY = new Set(['proxima-b', 'trappist-1', 'gj-273b']);
 const FOCAL_LEN = 1.6; // exaggerated focal-line length in scene units
 const PEARLS_PER_LINE = 5;
 const TOUR_DURATION_S = 78;
-const WARPS = [0.5, 1, 2, 4];
 
 // Compress light-years to a readable scene radius (log, so 4 ly and 40 ly
 // both fit while keeping their order).
@@ -59,7 +58,6 @@ export class Act6Worlds implements Act {
   private readonly targets: TargetView[] = [];
   private readonly anchors: LabelAnchor[] = [];
   private mode: ActMode = 'tour';
-  private warpIndex = 1;
   private focusIndex = -1;
   private lastFocus = -1;
   private readonly scratchV3 = new Vector3();
@@ -140,7 +138,6 @@ export class Act6Worlds implements Act {
     this.s.origin.setOrigin(vec3d(0, 0, 0));
     this.s.setActHeading(`ACT 6 / ${this.title}`, this.question);
     this.s.timeline.reset();
-    this.s.timeline.setWarp(WARPS[this.warpIndex] ?? 1);
     this.s.renderer.domElement.addEventListener('click', this.onClickBound);
     this.s.labels.setAnchors(this.anchors);
     this.focusIndex = -1;
@@ -286,7 +283,7 @@ export class Act6Worlds implements Act {
     });
     this.s.timeControls.set({
       paused: this.s.timeline.paused,
-      warpLabel: `${WARPS[this.warpIndex] ?? 1}X`,
+      warpLabel: this.s.timeline.warpLabel,
       progress: this.mode === 'tour' ? this.progress() : null
     });
   }
@@ -305,8 +302,7 @@ export class Act6Worlds implements Act {
   }
 
   onWarpCycle(): void {
-    this.warpIndex = (this.warpIndex + 1) % WARPS.length;
-    this.s.timeline.setWarp(WARPS[this.warpIndex] ?? 1);
+    this.s.timeline.cycleWarp();
   }
 
   onScrub(progress: number): void {

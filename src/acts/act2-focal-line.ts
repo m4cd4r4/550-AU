@@ -16,7 +16,6 @@ import type { Act, ActMode, ActServices } from './act';
 import { buildCaptionEvents, END_CAPTION, INTRO_CAPTION, TOUR_DURATION_S, tourDistanceAU } from './act2-tour';
 
 const COMPRESSION_D0_AU = 2;
-const WARPS = [0.5, 1, 2, 4];
 
 function antiTargetDirScene(): Vec3d {
   const proxima = targetsData.targets.find((t) => t.id === 'proxima-b');
@@ -37,7 +36,6 @@ export class Act2FocalLine implements Act {
   private readonly dir: Vec3d;
   private readonly events = buildCaptionEvents();
   private readonly daysSinceJ2000 = (Date.now() - Date.UTC(2000, 0, 1, 12)) / 86400000;
-  private warpIndex = 1;
   private lastCaptionR = 0;
   private introShown = false;
   private endShown = false;
@@ -66,7 +64,6 @@ export class Act2FocalLine implements Act {
     this.s.labels.setAnchors(this.ruler.labelAnchors());
     this.s.setActHeading(`ACT 2 / ${this.title}`, this.question);
     this.s.timeline.reset();
-    this.s.timeline.setWarp(WARPS[this.warpIndex] ?? 1);
     this.s.renderer.domElement.addEventListener('click', this.onClickBound);
     this.introShown = false;
     this.endShown = false;
@@ -189,7 +186,7 @@ export class Act2FocalLine implements Act {
     });
     this.s.timeControls.set({
       paused: this.s.timeline.paused,
-      warpLabel: `${WARPS[this.warpIndex] ?? 1}X`,
+      warpLabel: this.s.timeline.warpLabel,
       progress: this.mode === 'tour' ? this.progress() : null
     });
   }
@@ -211,8 +208,7 @@ export class Act2FocalLine implements Act {
   }
 
   onWarpCycle(): void {
-    this.warpIndex = (this.warpIndex + 1) % WARPS.length;
-    this.s.timeline.setWarp(WARPS[this.warpIndex] ?? 1);
+    this.s.timeline.cycleWarp();
   }
 
   onScrub(progress: number): void {
