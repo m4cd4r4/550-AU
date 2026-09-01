@@ -10,7 +10,7 @@ Interactive real-physics visualisation of the Solar Gravitational Lens Telescope
 
 Status: **all eight acts complete (Tour and Explore), physics tests green, generative audio, credits overlay, honest-scale system with a true-scale toggle. GitHub Pages workflow is prepared but not enabled.**
 
-Repo: `m4cd4r4/550-AU`.
+**Live app:** https://cosmos-collective.com.au/gravitational-lens
 
 ![Act 5: the Einstein ring from the lead pearl at 650 AU](docs/screenshots/act5-ring-view-1440p.png)
 
