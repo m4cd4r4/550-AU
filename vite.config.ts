@@ -9,7 +9,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: fileURLToPath(new URL('index.html', import.meta.url)),
-        spike: fileURLToPath(new URL('spike.html', import.meta.url))
+        spike: fileURLToPath(new URL('spike.html', import.meta.url)),
+        pearl: fileURLToPath(new URL('pearl.html', import.meta.url))
       }
     }
   },
