@@ -11,6 +11,7 @@ import { compressedMap, mapPosition } from '../render/distance-map';
 import type { LabelAnchor } from '../render/focal-ruler';
 import { eclipticToScene, focalLineDirScene } from '../render/frames';
 import { LaserRelay } from '../render/laser-relay';
+import { PearlLighting } from '../render/pearl-lighting';
 import { CUBESAT_ROLES, PearlModel } from '../render/pearl-models';
 import { PearlString } from '../render/pearl-string';
 import { planetMesh } from '../render/planet-textures';
@@ -44,6 +45,9 @@ export class Act4Pearls implements Act {
   private readonly string = new PearlString(this.dir);
   private readonly relay = new LaserRelay();
   private readonly detail = new PearlModel();
+  // The pearl close-up is the only lit model in this act; everything else
+  // here is unlit markers and lines.
+  private readonly lighting = new PearlLighting();
   private readonly earthMarker: Mesh;
   private readonly captions = buildCaptions(this.traj);
   private readonly daysSinceJ2000 = (Date.now() - Date.UTC(2000, 0, 1, 12)) / 86400000;
@@ -77,6 +81,7 @@ export class Act4Pearls implements Act {
 
   enter(mode: ActMode): void {
     this.s.scene.add(this.string.group, this.relay.group, this.detail.group, this.earthMarker);
+    this.lighting.attach(this.s.scene, this.s.renderer);
     this.s.setActHeading(`ACT 4 / ${this.title}`, this.question);
     this.s.timeline.reset();
     this.s.renderer.domElement.addEventListener('click', this.onClickBound);
@@ -397,6 +402,7 @@ export class Act4Pearls implements Act {
 
   exit(): void {
     this.s.scene.remove(this.string.group, this.relay.group, this.detail.group, this.earthMarker);
+    this.lighting.detach(this.s.scene);
     this.s.renderer.domElement.removeEventListener('click', this.onClickBound);
     this.closeDetail();
     this.s.labels.setAnchors([]);
