@@ -24,6 +24,10 @@ import { formatAu, formatCompression, formatDuration } from '../ui/format';
 import type { Act, ActMode, ActServices } from './act';
 import { buildCaptions, END_CAPTION, TOUR_DURATION_S, tourYears, voyagerLoupeAt } from './act4-tour';
 
+// Fraction of the camera distance the picked pearl's close-up spans.
+const DETAIL_VIEW_FRACTION = 0.34;
+// Larger once exploded, so each CubeSat is big enough to recognise.
+const EXPLODED_VIEW_FRACTION = 0.5;
 const COMPRESSION_D0_AU = 2;
 const EARTH = PLANETS.find((p) => p.name === 'Earth');
 const VOYAGER_IMG = `${import.meta.env.BASE_URL}assets/renders/voyager.jpg`;
@@ -64,12 +68,17 @@ export class Act4Pearls implements Act {
   private readonly roleAnchors: LabelAnchor[] = CUBESAT_ROLES.map((r) => ({
     text: r.role,
     displayPos: vec3d(),
-    accent: false
+    accent: false,
+    dy: 20 // sit below the CubeSat, not on top of it
   }));
   private readonly focusDisplay = vec3d();
   private readonly scratchV3 = new Vector3();
   private readonly lookV3 = new Vector3();
   private readonly sideV3 = new Vector3();
+  // Scene-space point the camera pans toward after a pick, so the picked
+  // pearl ends up at screen centre; null while idle.
+  private readonly panGoal = new Vector3();
+  private panning = false;
   private readonly dirV3: Vector3;
   private readonly onClickBound = (event: MouseEvent) => this.onClick(event);
 
@@ -255,8 +264,16 @@ export class Act4Pearls implements Act {
     this.s.origin.toScene(pos, this.scratchV3);
     this.detail.group.position.copy(this.scratchV3);
     const camDist = this.scratchV3.distanceTo(this.s.camera.position);
-    const scale = (camDist * 0.16) / PearlModel.SPAN_M;
-    this.detail.group.scale.setScalar(scale);
+    // The close-up grows as it explodes, capped by width on portrait screens
+    // so the ring never clips.
+    const e = this.detail.explode;
+    const frac = Math.min(
+      DETAIL_VIEW_FRACTION + (EXPLODED_VIEW_FRACTION - DETAIL_VIEW_FRACTION) * e,
+      this.s.camera.aspect * (0.55 + 0.2 * e)
+    );
+    this.detail.group.scale.setScalar((camDist * frac) / PearlModel.SPAN_M);
+    this.panToPick(dtRealS);
+    this.detail.advance(dtRealS);
     const ease = Math.min(1, dtRealS * 3);
     this.detail.setExplode(this.detail.explode + (this.explodeTarget - this.detail.explode) * ease);
     // The sail is only aboard while the pearl is diving; gone once cruising.
@@ -271,6 +288,21 @@ export class Act4Pearls implements Act {
       anchor.displayPos.y = this.s.origin.originDisplayAU.y + this.lookV3.y;
       anchor.displayPos.z = this.s.origin.originDisplayAU.z + this.lookV3.z;
     }
+  }
+
+  // Pan camera and orbit target together, so the view direction is kept and
+  // the picked pearl glides to screen centre.
+  private panToPick(dtRealS: number): void {
+    if (!this.panning) return;
+    const target = this.s.controls.target;
+    const step = this.scratchV3.copy(this.panGoal).sub(target);
+    if (step.lengthSq() < 1e-12) {
+      this.panning = false;
+      return;
+    }
+    step.multiplyScalar(Math.min(1, dtRealS * 4));
+    target.add(step);
+    this.s.camera.position.add(step);
   }
 
   private runCaptions(): void {
@@ -372,6 +404,8 @@ export class Act4Pearls implements Act {
     } else {
       this.detailIndex = picked;
       this.explodeTarget = 0;
+      this.s.origin.toScene(this.string.displayPosOf(picked) ?? this.focusDisplay, this.panGoal);
+      this.panning = true;
       this.detail.group.visible = true;
       this.string.markerOf(picked)!.visible = false;
     }
@@ -396,6 +430,7 @@ export class Act4Pearls implements Act {
     }
     this.detailIndex = -1;
     this.explodeTarget = 0;
+    this.panning = false;
     this.detail.group.visible = false;
     this.detail.setExplode(0);
   }

@@ -59,6 +59,7 @@ export class PearlModel {
   private readonly sails = new Group();
   private readonly sailMaterials: { mat: MeshBasicMaterial; base: number }[] = [];
   private explodeF = 0;
+  private tumbleT = 0;
   private sailShown = false;
 
   constructor() {
@@ -132,7 +133,7 @@ export class PearlModel {
       case 0:
       case 1: {
         // Mirror carrier: three hexagonal segments stowed on the long face.
-        const segMat = this.material(0xdfe8f2, { metalness: 1, roughness: 0.07 }, mats);
+        const segMat = this.material(0xdfe8f2, { metalness: 0.7, roughness: 0.7 }, mats);
         for (let i = 0; i < 3; i++) {
           const seg = new Mesh(new CircleGeometry(0.11, 6), segMat);
           seg.position.set(0.16, (i - 1) * 0.1, 0.06);
@@ -285,6 +286,10 @@ export class PearlModel {
       const radius = 0.15 + e * EXPLODE_RADIUS_M;
       cubesat.position.set(Math.cos(angle) * radius, Math.sin(angle) * radius * 0.6, 0.2);
       cubesat.rotation.z = angle + e * 0.6;
+      // Once apart, each CubeSat drifts slowly so the cluster reads as free
+      // bodies rather than a frozen diagram; out of phase so they never sync.
+      cubesat.rotation.x = Math.sin(this.tumbleT * 0.7 + i * 1.9) * 0.45 * e;
+      cubesat.rotation.y = Math.cos(this.tumbleT * 0.5 + i * 1.3) * 0.45 * e;
       cubesat.visible = e > 0.02;
       const opacity = Math.min(1, e * 2);
       for (const mat of this.cubesatMaterials[i] ?? []) mat.opacity = opacity;
@@ -307,6 +312,11 @@ export class PearlModel {
     this.sails.visible = this.sailShown && e < 0.995;
     const k = this.sailShown ? 1 - e : 0;
     for (const { mat, base } of this.sailMaterials) mat.opacity = base * k;
+  }
+
+  // Advances the free-drift phase used while the CubeSats are apart.
+  advance(dtS: number): void {
+    this.tumbleT += dtS;
   }
 
   get explode(): number {
