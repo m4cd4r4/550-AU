@@ -26,6 +26,8 @@ import { buildCaptions, END_CAPTION, TOUR_DURATION_S, tourYears, voyagerLoupeAt 
 
 // Fraction of the camera distance the picked pearl's close-up spans.
 const DETAIL_VIEW_FRACTION = 0.34;
+// Larger once exploded, so each CubeSat is big enough to recognise.
+const EXPLODED_VIEW_FRACTION = 0.5;
 const COMPRESSION_D0_AU = 2;
 const EARTH = PLANETS.find((p) => p.name === 'Earth');
 const VOYAGER_IMG = `${import.meta.env.BASE_URL}assets/renders/voyager.jpg`;
@@ -66,7 +68,8 @@ export class Act4Pearls implements Act {
   private readonly roleAnchors: LabelAnchor[] = CUBESAT_ROLES.map((r) => ({
     text: r.role,
     displayPos: vec3d(),
-    accent: false
+    accent: false,
+    dy: 20 // sit below the CubeSat, not on top of it
   }));
   private readonly focusDisplay = vec3d();
   private readonly scratchV3 = new Vector3();
@@ -261,11 +264,16 @@ export class Act4Pearls implements Act {
     this.s.origin.toScene(pos, this.scratchV3);
     this.detail.group.position.copy(this.scratchV3);
     const camDist = this.scratchV3.distanceTo(this.s.camera.position);
-    // Fill about a third of the view height, capped by width on portrait
-    // screens so the exploded ring never clips.
-    const frac = Math.min(DETAIL_VIEW_FRACTION, this.s.camera.aspect * 0.55);
+    // The close-up grows as it explodes, capped by width on portrait screens
+    // so the ring never clips.
+    const e = this.detail.explode;
+    const frac = Math.min(
+      DETAIL_VIEW_FRACTION + (EXPLODED_VIEW_FRACTION - DETAIL_VIEW_FRACTION) * e,
+      this.s.camera.aspect * (0.55 + 0.2 * e)
+    );
     this.detail.group.scale.setScalar((camDist * frac) / PearlModel.SPAN_M);
     this.panToPick(dtRealS);
+    this.detail.advance(dtRealS);
     const ease = Math.min(1, dtRealS * 3);
     this.detail.setExplode(this.detail.explode + (this.explodeTarget - this.detail.explode) * ease);
     // The sail is only aboard while the pearl is diving; gone once cruising.
