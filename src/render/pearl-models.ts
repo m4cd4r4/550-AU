@@ -43,6 +43,12 @@ export const CUBESAT_ROLES: CubesatRole[] = [
 
 const EXPLODE_RADIUS_M = 3.2;
 
+// Docking collapse: each CubeSat starts DOCK_STAGGER of the timeline after the
+// previous one and takes DOCK_WINDOW of it (5 * 0.1 + 0.5 = 1, so all seat by t=1).
+const DOCK_STAGGER = 0.1;
+const DOCK_WINDOW = 0.5;
+const DOCK_SWIRL_RAD = 0.9;
+
 const SAIL_R = 3.4;
 
 // Bus structure: machined aluminium under a dark multi-layer blanket.
@@ -279,10 +285,39 @@ export class PearlModel {
   setExplode(f: number): void {
     this.explodeF = Math.min(1, Math.max(0, f));
     const e = this.explodeF * this.explodeF * (3 - 2 * this.explodeF);
+    this.layout(() => e, () => 0);
+  }
+
+  // Docking collapse. t runs 0..1 linearly from the explode level f0 down to
+  // the assembled craft. Each CubeSat starts its approach DOCK_STAGGER later
+  // than the one before, swings in on a decaying spiral, brakes hard, then
+  // latches; every one is seated exactly at t = 1.
+  setDock(t: number, f0: number): void {
+    const k = Math.min(1, Math.max(0, t));
+    this.explodeF = f0 * (1 - k);
+    const dockE = (i: number): number => {
+      const u = Math.min(1, Math.max(0, (k - i * DOCK_STAGGER) / DOCK_WINDOW));
+      const brake = 1 - (1 - u) * (1 - u) * (1 - u); // fast in, slow final metres
+      return f0 * (1 - brake);
+    };
+    const swirl = (i: number): number => {
+      const u = Math.min(1, Math.max(0, (k - i * DOCK_STAGGER) / DOCK_WINDOW));
+      return (1 - u) * (1 - u) * DOCK_SWIRL_RAD * (i % 2 === 0 ? 1 : -1);
+    };
+    this.layout(dockE, swirl);
+  }
+
+  // Places every CubeSat from a per-CubeSat explode level e (0..1) and an
+  // extra angular offset, then fades the telescope against the furthest one.
+  private layout(eOf: (i: number) => number, swirlOf: (i: number) => number): void {
+    let eMax = 0;
     for (let i = 0; i < this.cubesats.length; i++) {
       const cubesat = this.cubesats[i];
       if (!cubesat) continue;
-      const angle = (i / this.cubesats.length) * Math.PI * 2;
+      const raw = eOf(i);
+      const e = raw * raw * (3 - 2 * raw);
+      eMax = Math.max(eMax, e);
+      const angle = (i / this.cubesats.length) * Math.PI * 2 + swirlOf(i);
       const radius = 0.15 + e * EXPLODE_RADIUS_M;
       cubesat.position.set(Math.cos(angle) * radius, Math.sin(angle) * radius * 0.6, 0.2);
       cubesat.rotation.z = angle + e * 0.6;
@@ -294,8 +329,8 @@ export class PearlModel {
       const opacity = Math.min(1, e * 2);
       for (const mat of this.cubesatMaterials[i] ?? []) mat.opacity = opacity;
     }
-    this.telescope.visible = e < 0.98;
-    for (const mat of this.telescopeMaterials) mat.opacity = 1 - e * 0.85;
+    this.telescope.visible = eMax < 0.98;
+    for (const mat of this.telescopeMaterials) mat.opacity = 1 - eMax * 0.85;
     this.updateSails();
   }
 
