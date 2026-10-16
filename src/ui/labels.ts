@@ -47,6 +47,8 @@ export class LabelLayer {
       if (el.style.display === 'none') el.style.display = '';
       const x = ((this.scratch.x + 1) / 2) * w;
       let y = ((1 - this.scratch.y) / 2) * h + (anchor.dy ?? 0);
+      const alpha = anchor.opacity ?? 1;
+      el.style.opacity = alpha >= 1 ? '' : `${alpha}`;
       if (anchor.nudge) {
         const bw = el.offsetWidth;
         const bh = el.offsetHeight || 14;
