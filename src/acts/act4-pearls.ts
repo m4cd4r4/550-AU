@@ -25,7 +25,7 @@ import type { Act, ActMode, ActServices } from './act';
 import { buildCaptions, END_CAPTION, TOUR_DURATION_S, tourYears, voyagerLoupeAt } from './act4-tour';
 
 // Fraction of the camera distance the picked pearl's close-up spans.
-const DETAIL_VIEW_FRACTION = 0.34;
+const DETAIL_VIEW_FRACTION = 0.46;
 // Seconds for the whole docking collapse, first approach to last latch.
 const DOCK_DURATION_S = 3.6;
 // Tour demo of the anatomy: opens at this mission year, holds assembled, explodes,
@@ -382,7 +382,7 @@ export class Act4Pearls implements Act {
     const e = this.detail.visualExplode;
     const frac = Math.min(
       DETAIL_VIEW_FRACTION + (EXPLODED_VIEW_FRACTION - DETAIL_VIEW_FRACTION) * e,
-      this.s.camera.aspect * (0.55 + 0.2 * e)
+      this.s.camera.aspect * (0.85 - 0.1 * e)
     );
     this.detail.group.scale.setScalar((camDist * frac) / PearlModel.SPAN_M);
     this.panToPick(dtRealS);
@@ -406,10 +406,13 @@ export class Act4Pearls implements Act {
     // The sail is only aboard while the pearl is diving; gone once cruising.
     this.detail.setSailShown(this.string.pearlAt(this.detailIndex)?.phase === 'diving');
 
-    // Role labels track the CubeSats through the explode animation.
+    // Role labels track the CubeSats through the explode animation and fade in
+    // as they separate, so they never sit on a craft that is still assembled.
+    const labelAlpha = Math.min(1, Math.max(0, (e - 0.45) / 0.4));
     for (let i = 0; i < this.roleAnchors.length; i++) {
       const anchor = this.roleAnchors[i];
       if (!anchor) continue;
+      anchor.opacity = labelAlpha;
       this.detail.cubesatWorldPos(i, this.lookV3);
       anchor.displayPos.x = this.s.origin.originDisplayAU.x + this.lookV3.x;
       anchor.displayPos.y = this.s.origin.originDisplayAU.y + this.lookV3.y;
