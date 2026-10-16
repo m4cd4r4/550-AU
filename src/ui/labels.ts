@@ -31,6 +31,7 @@ export class LabelLayer {
   update(origin: OriginFrame, camera: PerspectiveCamera): void {
     const w = this.el.clientWidth;
     const h = this.el.clientHeight;
+    const placed: { x: number; y: number; w: number; h: number }[] = [];
     for (const { el, anchor } of this.items) {
       origin.toScene(anchor.displayPos, this.scratch).project(camera);
       const visible =
@@ -44,8 +45,22 @@ export class LabelLayer {
         continue;
       }
       if (el.style.display === 'none') el.style.display = '';
-      el.style.left = `${((this.scratch.x + 1) / 2) * w}px`;
-      el.style.top = `${((1 - this.scratch.y) / 2) * h + (anchor.dy ?? 0)}px`;
+      const x = ((this.scratch.x + 1) / 2) * w;
+      let y = ((1 - this.scratch.y) / 2) * h + (anchor.dy ?? 0);
+      if (anchor.nudge) {
+        const bw = el.offsetWidth;
+        const bh = el.offsetHeight || 14;
+        for (let tries = 0; tries < 6; tries++) {
+          const hit = placed.find(
+            (r) => x < r.x + r.w && x + bw > r.x && y < r.y + r.h && y + bh > r.y
+          );
+          if (!hit) break;
+          y = hit.y + hit.h + 1;
+        }
+        placed.push({ x, y, w: bw, h: bh });
+      }
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
     }
   }
 }

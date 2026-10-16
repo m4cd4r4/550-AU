@@ -40,6 +40,7 @@ export interface LabelAnchor {
   text: string;
   displayPos: Vec3d;
   accent: boolean;
+  nudge?: boolean; // push down off any earlier label it overlaps
   dy?: number; // vertical screen offset in px, to de-overlap crowded labels
 }
 

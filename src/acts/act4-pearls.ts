@@ -86,6 +86,7 @@ export class Act4Pearls implements Act {
     text: r.role,
     displayPos: vec3d(),
     accent: false,
+    nudge: true,
     dy: 20 // sit below the CubeSat, not on top of it
   }));
   private readonly focusDisplay = vec3d();
@@ -378,7 +379,7 @@ export class Act4Pearls implements Act {
     const camDist = this.scratchV3.distanceTo(this.s.camera.position);
     // The close-up grows as it explodes, capped by width on portrait screens
     // so the ring never clips.
-    const e = this.detail.explode;
+    const e = this.detail.visualExplode;
     const frac = Math.min(
       DETAIL_VIEW_FRACTION + (EXPLODED_VIEW_FRACTION - DETAIL_VIEW_FRACTION) * e,
       this.s.camera.aspect * (0.55 + 0.2 * e)

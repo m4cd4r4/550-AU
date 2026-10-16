@@ -65,6 +65,9 @@ export class PearlModel {
   private readonly sails = new Group();
   private readonly sailMaterials: { mat: MeshBasicMaterial; base: number }[] = [];
   private explodeF = 0;
+  // How apart the furthest CubeSat is on screen (0..1); the close-up scale
+  // follows this, not the clock, so it stops changing once the last one seats.
+  private visualE = 0;
   private tumbleT = 0;
   private sailShown = false;
 
@@ -329,6 +332,7 @@ export class PearlModel {
       const opacity = Math.min(1, e * 2);
       for (const mat of this.cubesatMaterials[i] ?? []) mat.opacity = opacity;
     }
+    this.visualE = eMax;
     this.telescope.visible = eMax < 0.98;
     for (const mat of this.telescopeMaterials) mat.opacity = 1 - eMax * 0.85;
     this.updateSails();
@@ -356,6 +360,10 @@ export class PearlModel {
 
   get explode(): number {
     return this.explodeF;
+  }
+
+  get visualExplode(): number {
+    return this.visualE;
   }
 
   // World position of CubeSat i, for role labels.
