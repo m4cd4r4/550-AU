@@ -26,6 +26,9 @@ import { buildCaptions, END_CAPTION, TOUR_DURATION_S, tourYears, voyagerLoupeAt 
 
 // Fraction of the camera distance the picked pearl's close-up spans.
 const DETAIL_VIEW_FRACTION = 0.34;
+// Seconds for the whole docking collapse, first approach to last latch.
+const DOCK_DURATION_S = 3.6;
+
 // Larger once exploded, so each CubeSat is big enough to recognise.
 const EXPLODED_VIEW_FRACTION = 0.5;
 const COMPRESSION_D0_AU = 2;
@@ -64,6 +67,8 @@ export class Act4Pearls implements Act {
   private pearls: PearlState[] = [];
   private detailIndex = -1;
   private explodeTarget = 0;
+  // Docking collapse: null while exploding or at rest, else linear 0..1 progress.
+  private dock: { t: number; f0: number } | null = null;
   private readonly earthDisplay = vec3d();
   private readonly roleAnchors: LabelAnchor[] = CUBESAT_ROLES.map((r) => ({
     text: r.role,
@@ -274,8 +279,22 @@ export class Act4Pearls implements Act {
     this.detail.group.scale.setScalar((camDist * frac) / PearlModel.SPAN_M);
     this.panToPick(dtRealS);
     this.detail.advance(dtRealS);
-    const ease = Math.min(1, dtRealS * 3);
-    this.detail.setExplode(this.detail.explode + (this.explodeTarget - this.detail.explode) * ease);
+    if (this.explodeTarget > 0.5) {
+      this.dock = null;
+    } else if (!this.dock && this.detail.explode > 0.001) {
+      this.dock = { t: 0, f0: this.detail.explode };
+    }
+    if (this.dock) {
+      this.dock.t = Math.min(1, this.dock.t + dtRealS / DOCK_DURATION_S);
+      this.detail.setDock(this.dock.t, this.dock.f0);
+      if (this.dock.t >= 1) {
+        this.dock = null;
+        this.detail.setExplode(0);
+      }
+    } else {
+      const ease = Math.min(1, dtRealS * 3);
+      this.detail.setExplode(this.detail.explode + (this.explodeTarget - this.detail.explode) * ease);
+    }
     // The sail is only aboard while the pearl is diving; gone once cruising.
     this.detail.setSailShown(this.string.pearlAt(this.detailIndex)?.phase === 'diving');
 
@@ -430,6 +449,7 @@ export class Act4Pearls implements Act {
     }
     this.detailIndex = -1;
     this.explodeTarget = 0;
+    this.dock = null;
     this.panning = false;
     this.detail.group.visible = false;
     this.detail.setExplode(0);

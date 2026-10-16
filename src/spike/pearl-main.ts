@@ -37,7 +37,8 @@ new PearlLighting().attach(scene, renderer);
 const pearl = new PearlModel();
 scene.add(pearl.group);
 
-const exploded = flag('explode');
+const dockLoop = flag('dock');
+const exploded = flag('explode') || dockLoop;
 const spin = flag('spin', true);
 pearl.setSailShown(flag('sail'));
 pearl.setExplode(exploded ? 1 : 0);
@@ -62,7 +63,7 @@ roles.innerHTML =
     (r) =>
       `<div class="ctl-row"><span class="ctl-label">${r.role}</span></div>`
   ).join('') +
-  '<div class="ctl-note">?explode=1 &middot; ?sail=1 &middot; ?spin=0</div>';
+  '<div class="ctl-note">?explode=1 &middot; ?dock=1 &middot; ?sail=1 &middot; ?spin=0</div>';
 document.body.appendChild(roles);
 
 window.addEventListener('resize', () => {
@@ -73,10 +74,19 @@ window.addEventListener('resize', () => {
 });
 
 let t = 0;
+let clock = 0;
 let last = performance.now();
 function frame(now: number): void {
   const dt = Math.min((now - last) / 1000, 0.05);
   last = now;
+  if (dockLoop) {
+    // Preview: hold exploded 1.5 s, dock over 3.6 s, hold assembled 1.5 s, repeat.
+    clock += dt;
+    const cycle = clock % 6.6;
+    const k = Math.min(1, Math.max(0, (cycle - 1.5) / 3.6));
+    pearl.setDock(k, 1);
+  }
+  pearl.advance(dt);
   if (spin) {
     t += dt;
     pearl.group.rotation.y = Math.sin(t * 0.25) * 0.9;
