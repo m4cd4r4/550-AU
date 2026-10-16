@@ -89,7 +89,7 @@ export class Act6Worlds implements Act {
     // star, Sun and pearls visibly form one straight line.
     const sightLine = new Line(
       lineGeometry([starPos.x, starPos.y, starPos.z, 0, 0, 0]),
-      new LineBasicMaterial({ color: 0x2b3442, transparent: true, opacity: 0.35 })
+      new LineBasicMaterial({ color: 0x4a5a70, transparent: true, opacity: 0.42 })
     );
     sightLine.frustumCulled = false;
     this.group.add(sightLine);
@@ -116,6 +116,13 @@ export class Act6Worlds implements Act {
     }
 
     this.anchors.push({ text: t.name.toUpperCase(), displayPos: starPos, accent: false });
+    // Name the pearl row at its far tip, so each row visibly belongs to the
+    // star it points away from.
+    this.anchors.push({
+      text: `FOCAL LINE FOR ${t.name.toUpperCase()}`,
+      displayPos: scaleVec(vec3d(), focalDir, FOCAL_LEN * 1.08),
+      accent: false
+    });
     return {
       id: t.id,
       name: t.name,
@@ -189,11 +196,11 @@ export class Act6Worlds implements Act {
       const t = this.targets[i];
       if (!t) continue;
       const on = i === this.focusIndex;
-      (t.focalLine.material as LineBasicMaterial).opacity = on ? 0.95 : 0.4;
+      (t.focalLine.material as LineBasicMaterial).opacity = on ? 0.95 : 0.6;
       (t.focalLine.material as LineBasicMaterial).color.setHex(on ? 0xffb000 : 0x3d4a5a);
       const sight = t.sightLine.material as LineBasicMaterial;
-      sight.opacity = on ? 0.75 : 0.16;
-      sight.color.setHex(on ? 0xffb000 : 0x2b3442);
+      sight.opacity = on ? 0.75 : 0.42;
+      sight.color.setHex(on ? 0xffb000 : 0x4a5a70);
       t.starMaterial.color.setHex(on ? 0xfff0c4 : anyFocus ? 0x8f8360 : 0xffd27a);
       for (const pearl of t.pearls) {
         (pearl.material as MeshBasicMaterial).color.setHex(on ? 0xffd24d : 0xaab4c0);

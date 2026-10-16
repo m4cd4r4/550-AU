@@ -5,6 +5,8 @@
 
 import {
   BufferGeometry,
+  ConeGeometry,
+  CylinderGeometry,
   DoubleSide,
   Group,
   Line,
@@ -57,7 +59,7 @@ export class FocalRuler {
   private map: DistanceMap;
   private readonly milestones: Milestone[];
   private readonly rulerDir: Vec3d; // unit, scene axes
-  private readonly markers: { mesh: Mesh; baseScale: number }[] = [];
+  private readonly markers: { mesh: Object3D; baseScale: number }[] = [];
   private readonly planetDots = new Map<string, Mesh>();
   private readonly anchors: LabelAnchor[] = [];
   private readonly clicks: ClickTarget[] = [];
@@ -188,18 +190,26 @@ export class FocalRuler {
     for (const m of this.milestones) {
       if (m.kind === 'planet' || m.kind === 'band') continue;
       const accent = m.kind === 'lens';
-      const mesh =
+      const mesh: Object3D =
         m.kind === 'lens'
           ? new Mesh(
               new TorusGeometry(1, 0.09, 10, 40),
               new MeshBasicMaterial({ color: ACCENT, transparent: true, opacity: 0.95 })
             )
-          : new Mesh(new OctahedronGeometry(1, 0), new MeshBasicMaterial({ color: GREY }));
+          : m.kind === 'boundary'
+            ? // The heliopause is a surface, not a craft: a thin ring facing the axis.
+              new Mesh(
+                new TorusGeometry(1, 0.05, 8, 48),
+                new MeshBasicMaterial({ color: 0x6f93b8, transparent: true, opacity: 0.9 })
+              )
+            : m.label === 'Voyager 1'
+              ? buildVoyagerProbe()
+              : new Mesh(new OctahedronGeometry(1, 0), new MeshBasicMaterial({ color: GREY }));
       const at = dir.clone().multiplyScalar(this.map.toDisplay(m.au));
       mesh.position.copy(at);
-      if (m.kind === 'lens') mesh.lookAt(at.clone().add(dir));
+      if (m.kind === 'lens' || m.kind === 'boundary') mesh.lookAt(at.clone().add(dir));
       this.dynamic.add(mesh);
-      this.markers.push({ mesh, baseScale: accent ? 0.011 : 0.006 });
+      this.markers.push({ mesh, baseScale: accent ? 0.011 : m.label === 'Voyager 1' ? 0.014 : 0.006 });
       this.anchors.push({
         text: m.label,
         displayPos: vec3d(at.x, at.y, at.z),
@@ -244,4 +254,38 @@ export class FocalRuler {
       }
     }
   }
+}
+
+// Voyager 1 at about unit size: ten-sided bus, the big high-gain dish, the
+// long science boom and the RTG boom. Flat-shaded; it is a marker, not a render.
+function buildVoyagerProbe(): Group {
+  const probe = new Group();
+  const metal = new MeshBasicMaterial({ color: 0x6f7a86 });
+  const gold = new MeshBasicMaterial({ color: 0x8a6f1c });
+  const dark = new MeshBasicMaterial({ color: 0x3a4550 });
+
+  const bus = new Mesh(new CylinderGeometry(0.3, 0.3, 0.16, 10), gold);
+  bus.rotation.x = Math.PI / 2; // axis along z, dish end toward +z
+  probe.add(bus);
+
+  const dish = new Mesh(new ConeGeometry(0.85, 0.28, 24, 1, true), metal);
+  dish.rotation.x = -Math.PI / 2; // open face toward +z
+  dish.position.z = 0.22;
+  (dish.material as MeshBasicMaterial).side = DoubleSide;
+  probe.add(dish);
+
+  const boom = (x: number, y: number, len: number, mat: MeshBasicMaterial, tip: number): void => {
+    const rod = new Mesh(new CylinderGeometry(0.02, 0.02, len, 5), mat);
+    rod.position.set(x * len * 0.5, y * len * 0.5, -0.05);
+    rod.rotation.z = Math.atan2(y, x) - Math.PI / 2;
+    probe.add(rod);
+    const end = new Mesh(new CylinderGeometry(tip, tip, 0.12, 6), mat);
+    end.position.set(x * len, y * len, -0.05);
+    end.rotation.z = rod.rotation.z;
+    probe.add(end);
+  };
+  boom(-1, 0.25, 1.15, dark, 0.07); // science boom
+  boom(0.9, -0.5, 0.75, dark, 0.1); // RTG boom
+  boom(0.3, 1, 0.8, metal, 0.04); // magnetometer boom
+  return probe;
 }

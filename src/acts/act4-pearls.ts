@@ -28,6 +28,14 @@ import { buildCaptions, END_CAPTION, TOUR_DURATION_S, tourYears, voyagerLoupeAt 
 const DETAIL_VIEW_FRACTION = 0.34;
 // Seconds for the whole docking collapse, first approach to last latch.
 const DOCK_DURATION_S = 3.6;
+// Tour demo of the anatomy: opens at this mission year, holds assembled, explodes,
+// holds, docks, then closes. Seconds are real time, not timeline time.
+const DEMO_YEARS = 14.4;
+const DEMO_HOLD_ASSEMBLED_S = 1.2;
+const DEMO_HOLD_EXPLODED_S = 4;
+const DEMO_HOLD_DOCKED_S = 4.2;
+// Pixels around a pearl that count as hovering it in Explore.
+const PICK_RADIUS_PX = 26;
 
 // Larger once exploded, so each CubeSat is big enough to recognise.
 const EXPLODED_VIEW_FRACTION = 0.5;
@@ -67,6 +75,10 @@ export class Act4Pearls implements Act {
   private pearls: PearlState[] = [];
   private detailIndex = -1;
   private explodeTarget = 0;
+  // Tour demo state: null when idle; demoDone stops it replaying until a scrub back.
+  private demo: { t: number } | null = null;
+  private demoDone = false;
+  private hoverPearl = false;
   // Docking collapse: null while exploding or at rest, else linear 0..1 progress.
   private dock: { t: number; f0: number } | null = null;
   private readonly earthDisplay = vec3d();
@@ -86,6 +98,7 @@ export class Act4Pearls implements Act {
   private panning = false;
   private readonly dirV3: Vector3;
   private readonly onClickBound = (event: MouseEvent) => this.onClick(event);
+  private readonly onMoveBound = (event: PointerEvent) => this.onPointerMove(event);
 
   constructor(private readonly s: ActServices) {
     this.dirV3 = new Vector3(this.dir.x, this.dir.y, this.dir.z);
@@ -99,6 +112,7 @@ export class Act4Pearls implements Act {
     this.s.setActHeading(`ACT 4 / ${this.title}`, this.question);
     this.s.timeline.reset();
     this.s.renderer.domElement.addEventListener('click', this.onClickBound);
+    this.s.renderer.domElement.addEventListener('pointermove', this.onMoveBound);
     this.lastCaptionYears = -1;
     this.lastComputedYears = -1;
     this.endShown = false;
@@ -111,6 +125,8 @@ export class Act4Pearls implements Act {
     this.s.inspector.hide();
     this.s.ribbon.setToggle(false, false);
     this.closeDetail();
+    this.demo = null;
+    this.demoDone = false;
     if (mode === 'explore') {
       this.s.timeline.pause();
       // Re-anchor on the current lead pearl: a scrub immediately before the
@@ -118,6 +134,7 @@ export class Act4Pearls implements Act {
       this.recompute();
       this.anchorExploreCamera();
       this.s.controls.target.set(0, 0, 0);
+      this.s.captions.show('Click any pearl to open its CubeSats. Click it again to explode.', 12);
     } else {
       this.s.captions.clear();
       this.lastCaptionYears = this.missionYears;
@@ -165,7 +182,10 @@ export class Act4Pearls implements Act {
     // old throttle sampled coarsely and caused the stutter, worst at high warp.
     if (this.missionYears !== this.lastComputedYears) this.recompute();
 
-    if (this.mode === 'tour') this.placeTourCamera(p);
+    if (this.mode === 'tour') {
+      this.placeTourCamera(p);
+      this.runAnatomyDemo(dtRealS);
+    }
     this.string.update(this.s.origin, this.s.camera);
     this.updateEarthMarker();
     this.updateDetail(dtRealS);
@@ -173,6 +193,84 @@ export class Act4Pearls implements Act {
     this.relay.update(dtRealS, this.s.origin, Math.max(0.002, camDist * 0.012));
     this.updateHud();
     this.updateVoyagerLoupe();
+  }
+
+  // Tour only: once, show the pearl's anatomy without the viewer clicking.
+  // Opens the lead pearl's close-up, explodes it, then docks it back.
+  private runAnatomyDemo(dtRealS: number): void {
+    if (this.missionYears < DEMO_YEARS - 2) this.demoDone = false;
+    if (!this.demo) {
+      if (this.demoDone || this.s.timeline.paused) return;
+      if (this.missionYears < DEMO_YEARS || this.missionYears > DEMO_YEARS + 3) return;
+      if (this.pearls.length === 0) return;
+      this.openDetail(0, false);
+      this.demo = { t: 0 };
+      return;
+    }
+    // Scrubbed away from the demo window: drop it.
+    if (this.missionYears < DEMO_YEARS - 0.5 || this.missionYears > DEMO_YEARS + 6) {
+      this.closeDetail();
+      this.demo = null;
+      return;
+    }
+    this.demo.t += dtRealS;
+    const tExplode = DEMO_HOLD_ASSEMBLED_S;
+    const tDock = tExplode + DEMO_HOLD_EXPLODED_S;
+    const tEnd = tDock + DOCK_DURATION_S + DEMO_HOLD_DOCKED_S;
+    this.explodeTarget = this.demo.t >= tExplode && this.demo.t < tDock ? 1 : 0;
+    if (this.demo.t >= tEnd) {
+      this.closeDetail();
+      this.demo = null;
+      this.demoDone = true;
+    }
+  }
+
+  // Open the close-up for pearl i. Explore pans the camera to it; the tour
+  // keeps its own camera.
+  private openDetail(i: number, pan: boolean): void {
+    this.detailIndex = i;
+    this.explodeTarget = 0;
+    if (pan) {
+      this.s.origin.toScene(this.string.displayPosOf(i) ?? this.focusDisplay, this.panGoal);
+      this.panning = true;
+    }
+    this.detail.group.visible = true;
+    if (pan) {
+      const marker = this.string.markerOf(i);
+      if (marker) marker.visible = false;
+    }
+    this.refreshLabels();
+  }
+
+  // Index of the pearl under a screen point, or -1.
+  private pearlAtScreen(px: number, py: number, width: number, height: number): number {
+    let best = PICK_RADIUS_PX;
+    let picked = -1;
+    for (let i = 0; i < this.string.pearlCount(); i++) {
+      const pos = this.string.displayPosOf(i);
+      if (!pos) continue;
+      this.s.origin.toScene(pos, this.scratchV3).project(this.s.camera);
+      if (this.scratchV3.z > 1) continue;
+      const sx = ((this.scratchV3.x + 1) / 2) * width;
+      const sy = ((1 - this.scratchV3.y) / 2) * height;
+      const d = Math.hypot(sx - px, sy - py);
+      if (d < best) {
+        best = d;
+        picked = i;
+      }
+    }
+    return picked;
+  }
+
+  // Explore: a pointer over a pearl says it can be clicked.
+  private onPointerMove(event: PointerEvent): void {
+    if (this.mode !== 'explore') return;
+    const rect = this.s.renderer.domElement.getBoundingClientRect();
+    const over =
+      this.pearlAtScreen(event.clientX - rect.left, event.clientY - rect.top, rect.width, rect.height) >= 0;
+    if (over === this.hoverPearl) return;
+    this.hoverPearl = over;
+    this.s.renderer.domElement.style.cursor = over ? 'pointer' : '';
   }
 
   // As the lead pearl overtakes the Voyagers, magnify the craft it is passing.
@@ -266,7 +364,16 @@ export class Act4Pearls implements Act {
       this.closeDetail();
       return;
     }
-    this.s.origin.toScene(pos, this.scratchV3);
+    if (this.demo) {
+      // The tour camera keeps the whole string in frame, so a single pearl can
+      // be far off screen. Show the demo craft in front of the camera instead.
+      this.s.camera.getWorldDirection(this.scratchV3);
+      this.scratchV3
+        .multiplyScalar(Math.max(0.2, this.s.camera.position.length() * 0.5))
+        .add(this.s.camera.position);
+    } else {
+      this.s.origin.toScene(pos, this.scratchV3);
+    }
     this.detail.group.position.copy(this.scratchV3);
     const camDist = this.scratchV3.distanceTo(this.s.camera.position);
     // The close-up grows as it explodes, capped by width on portrait screens
@@ -398,21 +505,7 @@ export class Act4Pearls implements Act {
     const rect = this.s.renderer.domElement.getBoundingClientRect();
     const px = event.clientX - rect.left;
     const py = event.clientY - rect.top;
-    let best = 26;
-    let picked = -1;
-    for (let i = 0; i < this.string.pearlCount(); i++) {
-      const pos = this.string.displayPosOf(i);
-      if (!pos) continue;
-      this.s.origin.toScene(pos, this.scratchV3).project(this.s.camera);
-      if (this.scratchV3.z > 1) continue;
-      const sx = ((this.scratchV3.x + 1) / 2) * rect.width;
-      const sy = ((1 - this.scratchV3.y) / 2) * rect.height;
-      const d = Math.hypot(sx - px, sy - py);
-      if (d < best) {
-        best = d;
-        picked = i;
-      }
-    }
+    const picked = this.pearlAtScreen(px, py, rect.width, rect.height);
     if (picked < 0) {
       this.closeDetail();
       this.s.inspector.hide();
@@ -421,12 +514,7 @@ export class Act4Pearls implements Act {
     if (picked === this.detailIndex) {
       this.explodeTarget = this.explodeTarget > 0.5 ? 0 : 1;
     } else {
-      this.detailIndex = picked;
-      this.explodeTarget = 0;
-      this.s.origin.toScene(this.string.displayPosOf(picked) ?? this.focusDisplay, this.panGoal);
-      this.panning = true;
-      this.detail.group.visible = true;
-      this.string.markerOf(picked)!.visible = false;
+      this.openDetail(picked, true);
     }
     this.refreshLabels();
     const pearl = this.string.pearlAt(picked);
@@ -459,6 +547,8 @@ export class Act4Pearls implements Act {
     this.s.scene.remove(this.string.group, this.relay.group, this.detail.group, this.earthMarker);
     this.lighting.detach(this.s.scene);
     this.s.renderer.domElement.removeEventListener('click', this.onClickBound);
+    this.s.renderer.domElement.removeEventListener('pointermove', this.onMoveBound);
+    this.s.renderer.domElement.style.cursor = '';
     this.closeDetail();
     this.s.labels.setAnchors([]);
     this.s.captions.clear();
