@@ -139,7 +139,7 @@ muteButton.addEventListener('click', () => {
 });
 const startAudioOnce = (): void => {
   audio.start();
-  audio.setAct(currentAct?.id ?? 2);
+  audio.setAct(currentAct?.id ?? 0);
   window.removeEventListener('pointerdown', startAudioOnce);
   window.removeEventListener('keydown', startAudioOnce);
 };
@@ -221,7 +221,7 @@ function switchAct(id: number): void {
   audio.tick();
 }
 
-switchAct(2);
+switchAct(0);
 
 let statsUpdate: (() => void) | null = null;
 if (import.meta.env.DEV) {

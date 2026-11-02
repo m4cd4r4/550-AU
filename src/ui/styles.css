@@ -411,7 +411,8 @@ body {
 .contrast-inset {
   position: absolute;
   left: 180px;
-  bottom: 56px;
+  /* Clear of the centred captions, which reach this far left on a 1440 screen */
+  bottom: 140px;
   width: 300px;
   padding: 9px 12px 10px;
   pointer-events: auto;
