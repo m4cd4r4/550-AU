@@ -6,9 +6,9 @@ import facts from '../data/mission-facts.json';
 import { YEAR_S, AU_M } from '../sim/constants';
 import type { TrajectorySample } from '../sim/sundiver';
 
-const W = 340;
-const H = 190;
-const PAD = { left: 42, right: 12, top: 16, bottom: 30 };
+const W = 372;
+const H = 214;
+const PAD = { left: 50, right: 14, top: 18, bottom: 38 };
 const R_MIN = 0.1;
 const R_MAX = 700;
 const V_MAX = 30;
@@ -65,7 +65,7 @@ export class RaceChart {
 
     ctx.strokeStyle = '#1b2430';
     ctx.fillStyle = '#7d8896';
-    ctx.font = '9px ui-monospace, monospace';
+    ctx.font = '12px ui-monospace, monospace';
     ctx.lineWidth = 1;
     for (const r of [0.1, 1, 10, 100, 700]) {
       const px = this.x(r);
@@ -73,7 +73,7 @@ export class RaceChart {
       ctx.moveTo(px, PAD.top);
       ctx.lineTo(px, H - PAD.bottom);
       ctx.stroke();
-      ctx.fillText(r >= 1 ? `${r}` : `${r}`, px - 6, H - PAD.bottom + 12);
+      ctx.fillText(`${r}`, px - 8, H - PAD.bottom + 15);
     }
     for (const v of [10, 20, 30]) {
       const py = this.y(v);
@@ -81,19 +81,19 @@ export class RaceChart {
       ctx.moveTo(PAD.left, py);
       ctx.lineTo(W - PAD.right, py);
       ctx.stroke();
-      ctx.fillText(`${v}`, PAD.left - 20, py + 3);
+      ctx.fillText(`${v}`, PAD.left - 22, py + 4);
     }
-    ctx.fillText('AU (log)', W - PAD.right - 44, H - 6);
+    ctx.fillText('AU (log)', W - PAD.right - 58, H - 6);
     ctx.save();
-    ctx.translate(10, H / 2 + 20);
+    ctx.translate(13, H / 2 + 28);
     ctx.rotate(-Math.PI / 2);
     ctx.fillText('AU per year', 0, 0);
     ctx.restore();
 
     // Reference speeds: Voyager 1 and the chemical ceiling.
     const refs: [number, string, string, number][] = [
-      [facts.voyager1.speedAUYr, 'VOYAGER 1', '#7d8896', 10],
-      [facts.sundiver.chemicalMaxSpeedAUYr, 'CHEMICAL LIMIT', '#55606d', -4]
+      [facts.voyager1.speedAUYr, 'VOYAGER 1', '#9aa5b3', 14],
+      [facts.sundiver.chemicalMaxSpeedAUYr, 'CHEMICAL LIMIT', '#7d8896', -5]
     ];
     for (const [v, label, colour, labelDy] of refs) {
       ctx.strokeStyle = colour;
@@ -132,7 +132,7 @@ export class RaceChart {
       ctx.beginPath();
       ctx.arc(this.x(lastR), this.y(lastV), 3, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillText('SUNDIVER', Math.min(this.x(lastR) + 6, W - 70), this.y(lastV) - 5);
+      ctx.fillText('SUNDIVER', Math.min(this.x(lastR) + 6, W - 78), this.y(lastV) - 7);
     }
   }
 }

@@ -61,7 +61,7 @@ export class Act3Sundiver implements Act {
     this.s.setActHeading(`ACT 3 / ${this.title}`, this.question);
     this.s.timeline.reset();
     this.s.renderer.domElement.addEventListener('click', this.onClickBound);
-    this.chart = new RaceChart(this.s.hud.el.parentElement ?? document.body, this.traj.samples);
+    this.chart = new RaceChart(this.s.hud.stack, this.traj.samples);
     this.lastCaptionT = -1;
     this.endShown = false;
     this.setMode(mode);

@@ -101,7 +101,8 @@ export class Act0Problem implements Act {
     this.s.timeline.reset();
     this.lastCaption = -1;
     this.endShown = false;
-    (this.s.hud.el.parentElement ?? document.body).append(this.inset, this.readout);
+    this.s.hud.root.appendChild(this.inset);
+    this.s.hud.stack.appendChild(this.readout);
     this.s.labels.setAnchors(this.anchors);
     this.loupeShown = false;
     this.sharedFar = this.s.camera.far;

@@ -123,6 +123,7 @@ const timeControls = new TimeControls(ui, {
 });
 
 const rail = new ChapterRail(ui, CHAPTERS, (id) => switchAct(id));
+heading.appendChild(rail.select);
 
 // Audio: generative, gesture-gated, muted state persisted.
 const audio = new AmbientAudio();

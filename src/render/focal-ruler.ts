@@ -155,7 +155,8 @@ export class FocalRuler {
       this.dynamic.add(dot);
       this.planetDots.set(planet.name, dot);
       this.markers.push({ mesh: dot, baseScale: 0.013 });
-      this.anchors.push({ text: planet.name, displayPos: vec3d(), accent: false });
+      // Inner planets crowd the Sun once the frame pulls back: stack their names.
+      this.anchors.push({ text: planet.name, displayPos: vec3d(), accent: false, nudge: true });
       this.clicks.push({ object: dot, title: planet.name, rows: [] });
     }
   }
@@ -189,7 +190,6 @@ export class FocalRuler {
 
   private buildMilestoneMarkers(): void {
     const dir = new Vector3(this.rulerDir.x, this.rulerDir.y, this.rulerDir.z);
-    let alternate = 0;
     for (const m of this.milestones) {
       if (m.kind === 'planet' || m.kind === 'band') continue;
       const accent = m.kind === 'lens';
@@ -217,7 +217,10 @@ export class FocalRuler {
         text: m.label,
         displayPos: vec3d(at.x, at.y, at.z),
         accent,
-        dy: alternate++ % 2 === 0 ? -16 : 12
+        // Voyager 1 sits just past the heliopause and the two lens milestones
+        // are neighbours: stack any that would overprint.
+        dy: -16,
+        nudge: true
       });
       this.clicks.push({ object: mesh, title: m.label, rows: [] });
     }

@@ -123,7 +123,7 @@ export class ReconPanel {
     }
 
     // The surface is procedural: watermark the image itself.
-    ctx.font = '9px ui-monospace, monospace';
+    ctx.font = '12px ui-monospace, monospace';
     ctx.fillStyle = 'rgba(242, 246, 250, 0.75)';
     ctx.fillText('SPECULATIVE', 8, PANEL_PX - 8);
 

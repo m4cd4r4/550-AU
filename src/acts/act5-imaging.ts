@@ -107,7 +107,7 @@ export class Act5Imaging implements Act {
     this.s.timeline.reset();
     this.s.setBloom(ACT_BLOOM);
     this.s.renderer.domElement.addEventListener('click', this.onClickBound);
-    this.recon = new ReconPanel(this.s.hud.el.parentElement ?? document.body, createExoplanetCanvas());
+    this.recon = new ReconPanel(this.s.hud.stack, createExoplanetCanvas());
     this.s.origin.setOrigin(this.anchorDisplay);
     this.lastCaptionT = -1;
     this.endShown = false;

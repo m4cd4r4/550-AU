@@ -130,7 +130,7 @@ export class ScaleLadder {
       accent: true,
       opacity: 0,
       align: 'center',
-      dy: 10
+      dy: -26 // above the rim, on dark sky: amber text is lost on the amber disc
     };
     this.anchors.push(this.apertureAnchor);
   }

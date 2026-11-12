@@ -115,13 +115,16 @@ export class Act6Worlds implements Act {
       this.group.add(pearl);
     }
 
-    this.anchors.push({ text: t.name.toUpperCase(), displayPos: starPos, accent: false });
+    // Lift labels clear of the star glare and of the line they name.
+    this.anchors.push({ text: t.name.toUpperCase(), displayPos: starPos, accent: false, dy: -26, nudge: true });
     // Name the pearl row at its far tip, so each row visibly belongs to the
     // star it points away from.
     this.anchors.push({
       text: `FOCAL LINE FOR ${t.name.toUpperCase()}`,
       displayPos: scaleVec(vec3d(), focalDir, FOCAL_LEN * 1.08),
-      accent: false
+      accent: false,
+      dy: -16,
+      nudge: true
     });
     return {
       id: t.id,

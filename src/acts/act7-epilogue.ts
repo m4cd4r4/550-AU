@@ -119,7 +119,7 @@ export class Act7Epilogue implements Act {
     this.s.timeline.reset();
     this.lastCaption = -1;
     this.relay.setChain([vec3d(0, 0, 0), this.alphaPos]);
-    (this.s.hud.el.parentElement ?? document.body).appendChild(this.card);
+    this.s.hud.root.appendChild(this.card);
     this.setScene('link');
     this.setMode(mode);
   }
