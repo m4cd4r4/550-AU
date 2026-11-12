@@ -62,7 +62,7 @@ between them; global controls pause, scrub, and time-warp.
   buys about 1e6 of that).
 - **Act 1 - Einstein's Lens.** Photon rays bending past the Sun,
   converging on the focal line that draws itself outward as impact
-  parameter grows. The deflection is dramatised; alpha(b) and z(b) on
+  parameter grows, with a photon riding each ray. The deflection is dramatised; alpha(b) and z(b) on
   the HUD are the true values.
 - **Act 2 - The Focal Line.** A story-paced pullback from the Sun to the
   gravitational focus along a compressed ruler, with the planets on their
@@ -148,6 +148,11 @@ Dramatised, and labelled as such in-app:
 - **Act 1** exaggerates the deflection angle so the bend is visible at all
   (the true limb deflection is 1.75 arcsec, invisible at this zoom); the
   HUD carries the true alpha(b) and z(b), and the ribbon reads SCHEMATIC.
+  The photons riding the rays are a visual cue at an arbitrary pace, and
+  are off under reduced motion.
+- **Act 2** adds speed streaks while the tour covers ground. They are a
+  motion cue, not dust, they follow the tour's pace and not a physical
+  speed, and they are off under reduced motion.
 - **Act 3** draws the spacecraft far above true scale (a metre-class craft
   is sub-pixel at these distances); the HUD declares the factor and marks
   it NOT TO SCALE once only the bus remains. The sail's glow follows the
@@ -178,7 +183,9 @@ Dramatised, and labelled as such in-app:
   fit one frame; the directions are real and the ribbon says so.
 - **Act 7** is schematic: the comm link and the Sagittarius A* scene carry
   the real figures on cards, with the black hole flagged as a thought
-  experiment beyond current engineering.
+  experiment beyond current engineering. The black hole is the Event
+  Horizon Telescope image with its square edge faded out and the stars
+  behind it masked.
 
 ## Architecture notes
 

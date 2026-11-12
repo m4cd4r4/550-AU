@@ -21,6 +21,7 @@ import { R_SUN_M } from '../sim/constants';
 import { mToAu, radToArcsec } from '../sim/units';
 import { vec3d } from '../sim/vec3d';
 import type { LabelAnchor } from '../render/focal-ruler';
+import { prefersReducedMotion } from '../render/motion-streaks';
 import type { Act, ActMode, ActServices } from './act';
 
 // Impact parameters to trace, in solar radii (limb-grazing first).
@@ -30,7 +31,14 @@ const X_SOURCE = -4.2; // rays enter here
 const X_END = 6.6; // and continue past the crossing to here
 const XC0 = 1.9; // crossing x for a limb-grazing ray
 const XC1 = 1.35; // crossing x gained per (z/z_min - 1)
-const TOUR_DURATION_S = 82;
+const TOUR_DURATION_S = 56;
+const PHOTON_PERIOD_S = 3.4; // visual pacing only
+
+// Rays shown at tour progress p: the limb-grazing pair is there from the
+// first frame, then one more impact parameter every eighth of a minute.
+function revealedAt(p: number): number {
+  return Math.min(B_OVER_RSUN.length, Math.floor(p * B_OVER_RSUN.length) + 1);
+}
 
 function crossingX(bOverRsun: number): number {
   const zRatio = bOverRsun * bOverRsun; // z = b^2 z(R_sun)
@@ -43,7 +51,9 @@ export class Act1Lens implements Act {
   readonly question = 'How does gravity bend light?';
 
   private readonly group = new Group();
-  private readonly rays: { line: Line; b: number }[] = [];
+  private readonly rays: { line: Line; b: number; photon: Mesh; sign: number }[] = [];
+  private readonly photonsOn = !prefersReducedMotion();
+  private photonClock = 0;
   private readonly focalLine: Line;
   private readonly focalPositions: Float32Array;
   private readonly marker: Mesh;
@@ -70,8 +80,14 @@ export class Act1Lens implements Act {
         );
         line.frustumCulled = false;
         line.visible = false;
-        this.rays.push({ line, b: bR });
-        this.group.add(line);
+        // A photon riding the ray, so the light visibly travels and bends.
+        const photon = new Mesh(
+          new SphereGeometry(0.022, 10, 8),
+          new MeshBasicMaterial({ color: 0xfff4d6 })
+        );
+        photon.visible = false;
+        this.rays.push({ line, b: bR, photon, sign });
+        this.group.add(line, photon);
       }
     }
 
@@ -94,7 +110,7 @@ export class Act1Lens implements Act {
 
     this.anchors = [
       { text: 'SOURCE LIGHT', displayPos: vec3d(X_SOURCE + 0.1, Y_PER_RSUN * 1.9, 0), accent: false },
-      { text: 'SUN', displayPos: vec3d(0, -0.32, 0), accent: false },
+      { text: 'SUN', displayPos: vec3d(0, -0.16, 0), accent: false },
       { text: 'FOCAL LINE', displayPos: vec3d(crossingX(1.0), 0.12, 0), accent: true }
     ];
   }
@@ -130,11 +146,11 @@ export class Act1Lens implements Act {
     return Math.min(1, this.s.timeline.seconds / TOUR_DURATION_S);
   }
 
-  update(): void {
+  update(dtRealS: number): void {
     if (this.mode === 'tour') {
       const p = this.progress();
       // Reveal impact parameters in order; the focal line extends outward.
-      const target = Math.round(p * B_OVER_RSUN.length);
+      const target = revealedAt(p);
       while (this.revealed < target) this.revealNext();
       this.runCaptions(p);
       this.placeTourCamera(p);
@@ -143,8 +159,23 @@ export class Act1Lens implements Act {
         this.s.timeline.pause();
       }
     }
+    this.updatePhotons(dtRealS);
     this.updateMarker();
     this.updateHud();
+  }
+
+  private updatePhotons(dtRealS: number): void {
+    if (!(this.mode === 'tour' && this.s.timeline.paused)) this.photonClock += dtRealS;
+    for (const ray of this.rays) {
+      ray.photon.visible = this.photonsOn && ray.line.visible;
+      if (!ray.photon.visible) continue;
+      // Constant speed in x from the source to the far end; stagger by b.
+      const f = (this.photonClock / PHOTON_PERIOD_S + ray.b * 2.3) % 1;
+      const x = X_SOURCE + f * (X_END - X_SOURCE);
+      const y0 = ray.sign * Y_PER_RSUN * ray.b;
+      const y = x <= 0 ? y0 : y0 * (1 - x / crossingX(ray.b));
+      ray.photon.position.set(x, y, 0);
+    }
   }
 
   private revealNext(): void {
@@ -161,7 +192,8 @@ export class Act1Lens implements Act {
     this.revealed++;
     this.focalLine.geometry.getAttribute('position').needsUpdate = true;
     this.focalLine.geometry.setDrawRange(0, this.revealed);
-    this.s.captions.show(this.captionForReveal(bR), 6);
+    // The limb-grazing pair opens the act; its caption is a timed beat.
+    if (idx > 0 && this.mode === 'tour') this.s.captions.show(this.captionForReveal(bR), 6);
   }
 
   private revealAll(): void {
@@ -180,8 +212,9 @@ export class Act1Lens implements Act {
 
   private runCaptions(p: number): void {
     const beats = [
-      { at: 0.02, text: 'Mass curves space. Light from a distant world bends as it passes the Sun.' },
-      { at: 0.9, text: 'Every impact parameter has its own focus. Together they draw the focal line.' }
+      { at: 0.01, text: 'Mass curves space. Light from a distant world bends as it passes the Sun.' },
+      { at: 0.085, text: this.captionForReveal(1.0) },
+      { at: 0.955, text: 'Every impact parameter has its own focus. Together they draw the focal line.' }
     ];
     for (let i = 0; i < beats.length; i++) {
       const beat = beats[i];
@@ -266,7 +299,7 @@ export class Act1Lens implements Act {
 
   onScrub(progress: number): void {
     this.s.timeline.scrubTo(progress * TOUR_DURATION_S);
-    const target = Math.round(progress * B_OVER_RSUN.length);
+    const target = revealedAt(progress);
     this.revealed = 0;
     for (const ray of this.rays) ray.line.visible = false;
     this.focalLine.geometry.setDrawRange(0, 0);
@@ -279,7 +312,7 @@ export class Act1Lens implements Act {
     }
     this.focalLine.geometry.getAttribute('position').needsUpdate = true;
     this.focalLine.geometry.setDrawRange(0, this.revealed);
-    this.lastCaptionIndex = 1;
+    this.lastCaptionIndex = 2;
     this.endShown = progress >= 1;
     this.s.captions.clear();
   }

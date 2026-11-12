@@ -437,8 +437,7 @@ body {
   .scale-ribbon {
     left: 12px;
   }
-  .contrast-inset,
-  .epilogue-card {
+  .contrast-inset {
     left: 12px;
   }
   .hud {
@@ -629,10 +628,9 @@ body {
   line-height: 1.5;
 }
 
+/* Sits in the right-hand column under the telemetry, clear of the captions
+   and of the scene's subject. */
 .epilogue-card {
-  position: absolute;
-  left: var(--rail-gap);
-  bottom: 56px;
   width: 360px;
   padding: 9px 12px 10px;
   pointer-events: auto;

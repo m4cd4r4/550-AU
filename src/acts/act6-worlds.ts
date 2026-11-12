@@ -41,7 +41,7 @@ interface TargetView {
 const PRIMARY = new Set(['proxima-b', 'trappist-1', 'gj-273b']);
 const FOCAL_LEN = 1.6; // exaggerated focal-line length in scene units
 const PEARLS_PER_LINE = 5;
-const TOUR_DURATION_S = 78;
+const TOUR_DURATION_S = 63; // 21 s per target
 
 // Compress light-years to a readable scene radius (log, so 4 ly and 40 ly
 // both fit while keeping their order).
