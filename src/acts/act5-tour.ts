@@ -58,12 +58,21 @@ export function j2On(tS: number): boolean {
 }
 
 // Scan progress: the dance runs through C, keeps accumulating during D
-// (the telescopes do not stop for the camera), completes through E.
+// (the telescopes do not stop for the camera), completes early in E so the
+// map is whole before the closing reveal.
 export function scanFraction(tS: number): number {
   if (tS < 42) return 0;
   if (tS < 78) return ((tS - 42) / 36) * 0.55;
   if (tS < 96) return 0.55 + ((tS - 78) / 18) * 0.25;
-  return Math.min(1, 0.8 + ((tS - 96) / 10) * 0.2);
+  return Math.min(1, 0.8 + ((tS - 96) / (FINALE_AT_S - 96)) * 0.2);
+}
+
+// The closing reveal: the finished map full screen beside JWST's one pixel.
+export const FINALE_AT_S = 102;
+const FINALE_FADE_S = 2.5;
+
+export function finaleReveal(tS: number): number {
+  return Math.min(1, Math.max(0, (tS - FINALE_AT_S) / FINALE_FADE_S));
 }
 
 export const SUBTRACTION_AT_S = 60;

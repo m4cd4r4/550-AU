@@ -80,6 +80,8 @@ between them; global controls pause, scrub, and time-warp.
 - **Act 5 - Imaging the Ring.** The payoff: the live lensing shader at
   true angular scale, the 32 km image cylinder, the four-telescope raster
   dance with corona subtraction, and the map reconstructing pixel by pixel.
+  The tour ends on the finished map at full size beside JWST's view of the
+  same planet: one pixel.
 - **Act 6 - Many Worlds.** The real stellar neighbourhood, with focal
   lines radiating anti-target for Proxima b, TRAPPIST-1 and GJ 273b.
 - **Act 7 - Epilogue.** The lens works both ways: a Sun-to-Alpha-Centauri
@@ -168,7 +170,10 @@ Dramatised, and labelled as such in-app:
   strength for visibility (both stated on the HUD), draws the imaging grid
   far coarser than the true 1000 x 1000 raster (declared), and reconstructs
   the map as a progressive reveal standing in for the deconvolution. The
-  planet surface is procedural and watermarked speculative throughout.
+  planet surface is procedural and watermarked speculative throughout. The
+  closing comparison is schematic and the ribbon says so: the map is shown
+  at screen resolution, not its full 1000 x 1000 pixels, and JWST's one
+  pixel is drawn a few screen pixels wide in the map's mean colour.
 - **Act 6** log-compresses the light-year distances so all three targets
   fit one frame; the directions are real and the ribbon says so.
 - **Act 7** is schematic: the comm link and the Sagittarius A* scene carry

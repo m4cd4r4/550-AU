@@ -484,6 +484,103 @@ body {
   letter-spacing: 0.06em;
 }
 
+/* Act 5 finale: the finished map beside JWST's one pixel. It sits under the
+   captions and bottom controls and over the scene, labels and telemetry. */
+.finale {
+  --finale-size: min(100vh - 310px, (100vw - var(--rail-w) - 120px) / 2, 820px);
+  position: absolute;
+  top: 54px;
+  left: var(--rail-w);
+  right: 0;
+  bottom: 0;
+  padding-bottom: 170px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  background: var(--bg);
+}
+
+.finale-fig {
+  width: var(--finale-size);
+}
+
+.finale-title {
+  color: var(--accent);
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  margin-bottom: 10px;
+}
+
+.finale-note {
+  color: var(--text-dim);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  margin-top: 8px;
+}
+
+.finale-frame {
+  width: var(--finale-size);
+  height: var(--finale-size);
+  border: 1px solid var(--border);
+  background: #05070b;
+}
+
+.finale-frame canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.finale-pixel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.finale-pixel i {
+  width: 6px;
+  height: 6px;
+}
+
+/* Keep both titles on one line so the two frames stay level. */
+@media (max-width: 1100px) {
+  .finale-title {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+  }
+}
+
+@media (max-width: 900px) {
+  .finale {
+    --finale-size: min(100vh - 310px, (100vw - 72px) / 2);
+    left: 0;
+    gap: 24px;
+  }
+}
+
+/* Portrait phone: stack, and give the room to the map. */
+@media (max-width: 720px) {
+  .finale {
+    --finale-size: min(100vw - 32px, 100vh - 500px);
+    top: 40px;
+    flex-direction: column;
+    gap: 14px;
+    padding-bottom: 196px;
+  }
+  .finale-title {
+    margin-bottom: 6px;
+  }
+  .finale-note {
+    font-size: 12px;
+    margin-top: 5px;
+  }
+  .finale-pixel {
+    width: 96px;
+    height: 96px;
+  }
+}
+
 .contrast-inset {
   position: absolute;
   left: var(--rail-gap);
