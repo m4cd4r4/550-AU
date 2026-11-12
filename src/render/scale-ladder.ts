@@ -136,7 +136,9 @@ export class ScaleLadder {
   }
 
   // spanUnits: the shorter frame dimension at the JWST plane, in scene units.
-  update(spanUnits: number, dtRealS: number): void {
+  // portrait: the HUD panels sit over the top of the rim on a tall screen,
+  // so the aperture label hangs below the ring instead.
+  update(spanUnits: number, dtRealS: number, portrait = false): void {
     // A slow turn keeps the finished frame alive while the tour rests on it.
     if (!this.still) this.discMesh.rotation.z += dtRealS * 0.012;
     for (const { diameter, material, anchor } of this.rungs) {
@@ -151,5 +153,8 @@ export class ScaleLadder {
     // Faint while the frame is still inside the mirror, full once the rim is in view.
     this.disc.opacity = 0.07 * arrive + 0.23 * (1 - smoothstep(1.0, 2.2, fill));
     this.apertureAnchor.opacity = 1 - smoothstep(0.78, 0.86, fill);
+    const r = this.apertureDiameter / 2;
+    this.apertureAnchor.displayPos.y = portrait ? -r : r;
+    this.apertureAnchor.dy = portrait ? 12 : -26;
   }
 }

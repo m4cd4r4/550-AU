@@ -96,7 +96,9 @@ export class Act7Epilogue implements Act {
     this.group.add(this.sgrA);
 
     this.anchors = [
-      { text: 'SUN (LENS)', displayPos: vec3d(0, -0.28, 0), accent: false },
+      // Centred under the Sun: to its right it runs under the panels on a
+      // narrow screen.
+      { text: 'SUN (LENS)', displayPos: vec3d(0, -0.28, 0), accent: false, align: 'center' },
       { text: 'ALPHA CENTAURI (LENS)', displayPos: this.alphaPos, accent: true }
     ];
 
@@ -250,8 +252,13 @@ export class Act7Epilogue implements Act {
       // Slide the link left and down, out from under the right-hand panels.
       // A portrait screen has no side panels and no width to spare.
       if (this.s.camera.aspect > 1) {
-        this.s.camera.translateX(0.73 * Math.min(this.s.camera.aspect, 1.78));
+        // The panels take a larger share of a narrower landscape screen.
+        const aspect = Math.min(this.s.camera.aspect, 1.78);
+        this.s.camera.translateX(0.73 * aspect + 0.33 * (1.78 - aspect));
         this.s.camera.translateY(0.5);
+        // The labels project before the next render; without this they use
+        // the camera from before the slide and sit beside their stars.
+        this.s.camera.updateMatrixWorld();
       }
     } else {
       const q = (p - SCENE_SWITCH) / (1 - SCENE_SWITCH);

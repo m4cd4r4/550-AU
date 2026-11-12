@@ -143,7 +143,7 @@ export class Act0Problem implements Act {
     }
     const camDist = this.s.camera.position.length();
     const span = camDist * this.spanPerDist();
-    this.ladder.update(span, dtRealS);
+    this.ladder.update(span, dtRealS, this.s.camera.aspect < 1);
 
     // The loupe keeps JWST in view while it shrinks to a dot, then clears
     // the frame for the ring's arrival.
