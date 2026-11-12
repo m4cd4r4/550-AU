@@ -6,7 +6,7 @@ import facts from '../data/mission-facts.json';
 import { YEAR_S, DAY_S } from '../sim/constants';
 import type { SundiverTrajectory } from '../sim/sundiver';
 
-export const TOUR_DURATION_S = 100;
+export const TOUR_DURATION_S = 78;
 
 export interface TourWaypoint {
   p: number; // tour progress 0..1
@@ -21,12 +21,12 @@ export function buildTourWaypoints(traj: SundiverTrajectory): TourWaypoint[] {
   const tMinFocus = traj.timeToAU(facts.lens.minFocalDistanceAU);
   return [
     { p: 0.0, tS: 0 },
-    { p: 0.08, tS: 12 * DAY_S }, // launch and sail deployment
-    { p: 0.26, tS: tPeri - 4 * DAY_S }, // the long fall sunward
-    { p: 0.4, tS: tPeri + 6 * DAY_S }, // perihelion slow motion
-    { p: 0.52, tS: 0.75 * YEAR_S }, // slingshot exit
-    { p: 0.62, tS: traj.jettisonS + 30 * DAY_S }, // jettison beat
-    { p: 0.78, tS: Number.isFinite(tVoyager) ? tVoyager : 7 * YEAR_S },
+    { p: 0.09, tS: 12 * DAY_S }, // launch and sail deployment
+    { p: 0.256, tS: tPeri - 4 * DAY_S }, // the long fall sunward
+    { p: 0.46, tS: tPeri + 6 * DAY_S }, // perihelion slow motion, in close-up
+    { p: 0.59, tS: 0.75 * YEAR_S }, // slingshot exit
+    { p: 0.69, tS: traj.jettisonS + 30 * DAY_S }, // jettison beat
+    { p: 0.846, tS: Number.isFinite(tVoyager) ? tVoyager : 7 * YEAR_S },
     { p: 1.0, tS: Number.isFinite(tMinFocus) ? tMinFocus + 0.4 * YEAR_S : 22 * YEAR_S }
   ];
 }

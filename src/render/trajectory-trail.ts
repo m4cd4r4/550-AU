@@ -61,7 +61,9 @@ export class TrajectoryTrail {
     this.group.add(this.fullLine, this.travelled);
   }
 
-  update(origin: OriginFrame, currentTS: number): void {
+  // current: the craft's scene position. The samples are too coarse to pass
+  // through it in a close-up, so both lines are joined at the craft itself.
+  update(origin: OriginFrame, currentTS: number, current?: Vector3): void {
     for (let i = 0; i < this.displayPoints.length; i++) {
       const p = this.displayPoints[i];
       if (!p) continue;
@@ -81,8 +83,17 @@ export class TrajectoryTrail {
         break;
       }
     }
+    const n = this.sampleTimes.length;
+    if (current && travelledCount >= 1 && travelledCount < n) {
+      current.toArray(this.travelledPositions, travelledCount * 3);
+      current.toArray(this.fullPositions, (travelledCount - 1) * 3);
+      this.travelled.geometry.setDrawRange(0, travelledCount + 1);
+      this.fullLine.geometry.setDrawRange(travelledCount - 1, n - travelledCount + 1);
+    } else {
+      this.travelled.geometry.setDrawRange(0, Math.max(2, travelledCount));
+      this.fullLine.geometry.setDrawRange(0, n);
+    }
     this.fullLine.geometry.getAttribute('position').needsUpdate = true;
     this.travelled.geometry.getAttribute('position').needsUpdate = true;
-    this.travelled.geometry.setDrawRange(0, Math.max(2, travelledCount));
   }
 }

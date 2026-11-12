@@ -181,7 +181,7 @@ export class Act7Epilogue implements Act {
       if (p >= 1) this.s.timeline.pause();
     }
     if (this.scene === 'link') {
-      this.relay.update(dtRealS, this.s.origin, Math.max(0.02, this.s.camera.position.length() * 0.02));
+      this.relay.update(dtRealS, this.s.origin, this.s.camera.position, 0.02);
       this.alphaCen.scale.setScalar(
         Math.max(1, this.scratchV3.copy(this.alphaCen.position).distanceTo(this.s.camera.position) * 0.02)
       );

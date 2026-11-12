@@ -34,6 +34,9 @@ const DEMO_YEARS = 14.4;
 const DEMO_HOLD_ASSEMBLED_S = 1.2;
 const DEMO_HOLD_EXPLODED_S = 4;
 const DEMO_HOLD_DOCKED_S = 4.2;
+// Tour: the lead pearl's close-up stays on screen as an inset, this fraction
+// of the camera distance across, and moves to centre stage for the demo.
+const INSET_VIEW_FRACTION = 0.2;
 // Pixels around a pearl that count as hovering it in Explore.
 const PICK_RADIUS_PX = 26;
 
@@ -89,6 +92,18 @@ export class Act4Pearls implements Act {
     nudge: true,
     dy: 20 // sit below the CubeSat, not on top of it
   }));
+  // Caption under the tour inset; fades out while the close-up is centre stage.
+  private readonly insetAnchor: LabelAnchor = {
+    text: 'PEARL 1 CLOSE-UP (NOT TO SCALE)',
+    displayPos: vec3d(),
+    accent: false,
+    align: 'center'
+  };
+  // 0 = inset in the corner, 1 = centre stage for the anatomy demo.
+  private insetK = 0;
+  private labelsKey = '';
+  private readonly rightV3 = new Vector3();
+  private readonly upV3 = new Vector3();
   private readonly focusDisplay = vec3d();
   private readonly scratchV3 = new Vector3();
   private readonly lookV3 = new Vector3();
@@ -185,13 +200,13 @@ export class Act4Pearls implements Act {
 
     if (this.mode === 'tour') {
       this.placeTourCamera(p);
+      if (this.detailIndex < 0 && this.pearls.length > 0) this.openDetail(0, false);
       this.runAnatomyDemo(dtRealS);
     }
     this.string.update(this.s.origin, this.s.camera);
     this.updateEarthMarker();
     this.updateDetail(dtRealS);
-    const camDist = this.s.camera.position.length();
-    this.relay.update(dtRealS, this.s.origin, Math.max(0.002, camDist * 0.012));
+    this.relay.update(dtRealS, this.s.origin, this.s.camera.position, 0.016);
     this.updateHud();
     this.updateVoyagerLoupe();
   }
@@ -204,13 +219,12 @@ export class Act4Pearls implements Act {
       if (this.demoDone || this.s.timeline.paused) return;
       if (this.missionYears < DEMO_YEARS || this.missionYears > DEMO_YEARS + 3) return;
       if (this.pearls.length === 0) return;
-      this.openDetail(0, false);
       this.demo = { t: 0 };
       return;
     }
     // Scrubbed away from the demo window: drop it.
-    if (this.missionYears < DEMO_YEARS - 0.5 || this.missionYears > DEMO_YEARS + 6) {
-      this.closeDetail();
+    if (this.missionYears < DEMO_YEARS - 0.5 || this.missionYears > DEMO_YEARS + 9) {
+      this.explodeTarget = 0;
       this.demo = null;
       return;
     }
@@ -220,7 +234,6 @@ export class Act4Pearls implements Act {
     const tEnd = tDock + DOCK_DURATION_S + DEMO_HOLD_DOCKED_S;
     this.explodeTarget = this.demo.t >= tExplode && this.demo.t < tDock ? 1 : 0;
     if (this.demo.t >= tEnd) {
-      this.closeDetail();
       this.demo = null;
       this.demoDone = true;
     }
@@ -286,7 +299,6 @@ export class Act4Pearls implements Act {
   // advances (cheap); the DOM label refresh below stays gated to launch count.
   private recompute(): void {
     this.lastComputedYears = this.missionYears;
-    const hadCount = this.pearls.length;
     this.pearls = pearlStringAt(this.missionYears, this.traj);
     this.string.setPearls(this.pearls, this.map);
 
@@ -309,9 +321,9 @@ export class Act4Pearls implements Act {
       this.relay.setChain([]);
     }
 
-    if (this.pearls.length !== hadCount || this.detailIndex >= 0) {
-      this.refreshLabels();
-    }
+    // Rebuild the labels only when what they say changes, not every frame.
+    const key = `${this.pearls.length}/${hasOperating}/${this.explodeTarget > 0.5}/${this.detailIndex}/${this.mode}`;
+    if (key !== this.labelsKey) this.refreshLabels();
   }
 
   private refreshLabels(): void {
@@ -320,7 +332,10 @@ export class Act4Pearls implements Act {
     if (this.detailIndex >= 0 && this.explodeTarget > 0.5) {
       anchors.push(...this.roleAnchors);
     }
+    if (this.detailIndex >= 0 && this.mode === 'tour') anchors.push(this.insetAnchor);
     this.s.labels.setAnchors(anchors);
+    const operating = this.pearls.some((pearl) => pearl.phase === 'operating');
+    this.labelsKey = `${this.pearls.length}/${operating}/${this.explodeTarget > 0.5}/${this.detailIndex}/${this.mode}`;
   }
 
   private placeTourCamera(p: number): void {
@@ -348,6 +363,25 @@ export class Act4Pearls implements Act {
 
     // Look back down the string toward the Sun so the chain reads.
     this.lookV3.copy(this.dirV3).multiplyScalar(-focusR * 0.3);
+
+    // Once the relay is live, rise above and beyond the lead pearl and look
+    // home down the string: the lead pearl sits low in the frame, the Sun
+    // high, and the pulses run the whole chain between them. Staying near the
+    // lead pearl matters, because the compressed map bunches the outer pearls
+    // and only perspective opens them up again.
+    const f = Math.min(1, Math.max(0, (p - 0.64) / 0.12));
+    const relayBlend = f * f * (3 - 2 * f);
+    if (relayBlend > 0) {
+      const leadRel = leadDisplay - focusR;
+      this.scratchV3
+        .copy(this.dirV3)
+        .multiplyScalar(leadRel + 0.28 * leadDisplay)
+        .addScaledVector(this.s.camera.up, 0.28 * leadDisplay)
+        .addScaledVector(side, 0.05 * leadDisplay);
+      this.s.camera.position.lerp(this.scratchV3, relayBlend);
+      this.scratchV3.copy(this.dirV3).multiplyScalar(leadRel - 0.177 * leadDisplay);
+      this.lookV3.lerp(this.scratchV3, relayBlend);
+    }
     this.s.camera.lookAt(this.lookV3);
   }
 
@@ -365,13 +399,34 @@ export class Act4Pearls implements Act {
       this.closeDetail();
       return;
     }
-    if (this.demo) {
-      // The tour camera keeps the whole string in frame, so a single pearl can
-      // be far off screen. Show the demo craft in front of the camera instead.
-      this.s.camera.getWorldDirection(this.scratchV3);
+    const tour = this.mode === 'tour';
+    let insetSpan = 0;
+    if (tour) {
+      // The tour camera keeps the whole string in frame, so a single pearl is
+      // a few pixels. Hold its close-up in front of the camera instead: in the
+      // lower left as an inset, gliding to centre stage for the anatomy demo.
+      const cam = this.s.camera;
+      cam.updateMatrixWorld();
+      this.insetK += ((this.demo ? 1 : 0) - this.insetK) * Math.min(1, dtRealS * 2.5);
+      const corner = 1 - this.insetK;
+      const depth = Math.max(0.2, cam.position.length() * 0.5);
+      const halfH = depth * Math.tan((cam.fov * Math.PI) / 360);
+      const halfW = halfH * cam.aspect;
+      const portrait = cam.aspect < 1;
+      insetSpan = depth * Math.min(INSET_VIEW_FRACTION, cam.aspect * 0.4);
+      this.rightV3.setFromMatrixColumn(cam.matrixWorld, 0);
+      this.upV3.setFromMatrixColumn(cam.matrixWorld, 1);
+      cam.getWorldDirection(this.scratchV3);
       this.scratchV3
-        .multiplyScalar(Math.max(0.2, this.s.camera.position.length() * 0.5))
-        .add(this.s.camera.position);
+        .multiplyScalar(depth)
+        .add(cam.position)
+        .addScaledVector(this.rightV3, (portrait ? -0.42 : -0.5) * halfW * corner)
+        .addScaledVector(this.upV3, (portrait ? -0.36 : -0.25) * halfH * corner);
+      this.insetAnchor.opacity = Math.max(0, 1 - this.insetK * 3);
+      this.lookV3.copy(this.scratchV3).addScaledVector(this.upV3, -insetSpan * 0.62);
+      this.insetAnchor.displayPos.x = this.s.origin.originDisplayAU.x + this.lookV3.x;
+      this.insetAnchor.displayPos.y = this.s.origin.originDisplayAU.y + this.lookV3.y;
+      this.insetAnchor.displayPos.z = this.s.origin.originDisplayAU.z + this.lookV3.z;
     } else {
       this.s.origin.toScene(pos, this.scratchV3);
     }
@@ -380,10 +435,11 @@ export class Act4Pearls implements Act {
     // The close-up grows as it explodes, capped by width on portrait screens
     // so the ring never clips.
     const e = this.detail.visualExplode;
-    const frac = Math.min(
+    const stageFrac = Math.min(
       DETAIL_VIEW_FRACTION + (EXPLODED_VIEW_FRACTION - DETAIL_VIEW_FRACTION) * e,
       this.s.camera.aspect * (0.85 - 0.1 * e)
     );
+    const frac = tour ? insetSpan / camDist + (stageFrac - insetSpan / camDist) * this.insetK : stageFrac;
     this.detail.group.scale.setScalar((camDist * frac) / PearlModel.SPAN_M);
     this.panToPick(dtRealS);
     this.detail.advance(dtRealS);

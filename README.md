@@ -69,11 +69,14 @@ between them; global controls pause, scrub, and time-warp.
   orbits as real textured surfaces, the Kuiper belt, the heliopause,
   Voyager 1, and the two lens milestones.
 - **Act 3 - The Sundiver.** The integrated trajectory: sail deployment,
-  perihelion slingshot at 0.1 AU, jettison at year 2, and a speed race
-  against Voyager 1 and chemical propulsion.
+  a close-up of the perihelion slingshot at 0.1 AU with the sail turning
+  face-on and heating, jettison at year 2, and a speed race against
+  Voyager 1 and chemical propulsion, with the distances it passes marked
+  on the trail.
 - **Act 4 - The String of Pearls.** Yearly launches marching out at
   ~25 AU spacing, the pearl inspector (six CubeSats to a 1 m telescope),
-  and the laser relay hopping images home.
+  and the laser relay hopping images home. The tour keeps a close-up of
+  the lead pearl on screen beside the wide view.
 - **Act 5 - Imaging the Ring.** The payoff: the live lensing shader at
   true angular scale, the 32 km image cylinder, the four-telescope raster
   dance with corona subtraction, and the map reconstructing pixel by pixel.
@@ -145,7 +148,12 @@ Dramatised, and labelled as such in-app:
   HUD carries the true alpha(b) and z(b), and the ribbon reads SCHEMATIC.
 - **Act 3** draws the spacecraft far above true scale (a metre-class craft
   is sub-pixel at these distances); the HUD declares the factor and marks
-  it NOT TO SCALE once only the bus remains. The sail lightness number is a
+  it NOT TO SCALE once only the bus remains. The sail's glow follows the
+  temperature estimate on the HUD but its colour is illustrative. The speed
+  streaks are a motion cue, not dust, and are off under reduced motion. The
+  trail markers sit where the integrated path crosses each distance; the
+  Voyager 1 marker shows how far out Voyager 1 is, not its direction, which
+  is well out of this plane. The sail lightness number is a
   tuned effective parameter (recorded in `mission-facts.json`), because the
   published exit speed exceeds what the quoted sail loading gives
   physically. The published timeline figures are quoted as claims; the
@@ -153,8 +161,9 @@ Dramatised, and labelled as such in-app:
   `docs/BUILD-PROMPT.md`.
 - **Act 4** compresses the 25 AU pearl spacing for the frame; the ribbon
   declares the compression, and the true spacing is on the HUD. The laser
-  pulse cadence is visual; the true 13 h transmit and 3.2 day light lag are
-  on the HUD and captions.
+  pulse cadence and pulse size are visual; the true 13 h transmit and
+  3.2 day light lag are on the HUD and captions. The lead pearl's close-up
+  is held in front of the camera as an inset and labelled not to scale.
 - **Act 5** exaggerates the source-planet angular size and the J2 caustic
   strength for visibility (both stated on the HUD), draws the imaging grid
   far coarser than the true 1000 x 1000 raster (declared), and reconstructs

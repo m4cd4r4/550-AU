@@ -17,9 +17,9 @@ import {
 import type { Vec3d } from '../sim/vec3d';
 import type { OriginFrame } from './floating-origin';
 
-const PULSE_COUNT = 3;
-const HOP_SECONDS = 0.5; // visual seconds per hop
-const PULSE_SPACING_S = 7;
+const PULSE_COUNT = 8;
+const HOP_SECONDS = 0.55; // visual seconds per hop
+const CYCLE_GAP_S = 1; // pause before a pulse sets off again
 
 function pulseTexture(): CanvasTexture {
   const canvas = document.createElement('canvas');
@@ -52,7 +52,7 @@ export class LaserRelay {
     this.lineMaterial = new LineBasicMaterial({
       color: 0x4f9fd8,
       transparent: true,
-      opacity: 0.28
+      opacity: 0.5
     });
     const geometry = new BufferGeometry();
     geometry.setAttribute('position', new BufferAttribute(this.linePositions, 3));
@@ -71,7 +71,7 @@ export class LaserRelay {
         })
       );
       sprite.visible = false;
-      this.pulses.push({ sprite, t: -i * PULSE_SPACING_S });
+      this.pulses.push({ sprite, t: i / PULSE_COUNT });
       this.group.add(sprite);
     }
   }
@@ -82,7 +82,9 @@ export class LaserRelay {
     this.group.visible = chain.length >= 2;
   }
 
-  update(dtRealS: number, origin: OriginFrame, pulseScale: number): void {
+  // pulseAngular: pulse size as a fraction of its distance from the camera,
+  // so a pulse near the camera is not a giant and a far one is not lost.
+  update(dtRealS: number, origin: OriginFrame, cameraPos: Vector3, pulseAngular: number): void {
     if (this.chain.length < 2) return;
     this.clock += dtRealS;
 
@@ -103,20 +105,24 @@ export class LaserRelay {
     for (let i = 0; i < this.pulses.length; i++) {
       const pulse = this.pulses[i];
       if (!pulse) continue;
-      const local = (this.clock + pulse.t) % (journeyS + PULSE_SPACING_S);
-      if (local < 0 || local >= journeyS) {
+      // Pulses are spread evenly through the cycle, so one is always in flight.
+      const cycleS = journeyS + CYCLE_GAP_S;
+      const local = (this.clock + pulse.t * cycleS) % cycleS;
+      if (local >= journeyS) {
         pulse.sprite.visible = false;
         continue;
       }
       const hopIndex = Math.floor(local / HOP_SECONDS);
-      const f = (local - hopIndex * HOP_SECONDS) / HOP_SECONDS;
+      const linear = (local - hopIndex * HOP_SECONDS) / HOP_SECONDS;
+      // Ease each hop so the pulse dwells on a pearl before leaving it.
+      const f = linear * linear * (3 - 2 * linear);
       const from = this.chain[hopIndex];
       const to = this.chain[hopIndex + 1];
       if (!from || !to) continue;
       origin.toScene(from, this.scratchA);
       origin.toScene(to, this.scratchB);
       pulse.sprite.position.lerpVectors(this.scratchA, this.scratchB, f);
-      pulse.sprite.scale.setScalar(pulseScale);
+      pulse.sprite.scale.setScalar(pulse.sprite.position.distanceTo(cameraPos) * pulseAngular);
       pulse.sprite.visible = true;
     }
   }
