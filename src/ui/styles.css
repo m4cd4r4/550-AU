@@ -312,6 +312,50 @@ body {
   font-size: 10px;
 }
 
+.labels .label.center {
+  transform: translate(-50%, 0);
+}
+
+/* Act 0: how much the view spans, counting up to the 90 km aperture. */
+.frame-readout {
+  position: absolute;
+  top: 208px;
+  right: 12px;
+  width: 250px;
+  padding: 10px 16px 11px;
+  text-align: center;
+}
+
+.frame-readout .k {
+  color: var(--text-dim);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+}
+
+.frame-readout .k b {
+  color: var(--accent);
+  font-weight: normal;
+}
+
+.frame-readout .v {
+  color: var(--value);
+  font-size: 34px;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+}
+
+.frame-readout .bar {
+  height: 3px;
+  margin: 5px 0 8px;
+  background: var(--border);
+}
+
+.frame-readout .bar i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
 .inspector {
   position: absolute;
   right: 12px;

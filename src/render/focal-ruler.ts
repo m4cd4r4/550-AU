@@ -43,6 +43,7 @@ export interface LabelAnchor {
   opacity?: number; // 0..1, default 1
   nudge?: boolean; // push down off any earlier label it overlaps
   dy?: number; // vertical screen offset in px, to de-overlap crowded labels
+  align?: 'center'; // centre the label on the anchor, hanging below it
 }
 
 export interface ClickTarget {

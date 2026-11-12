@@ -54,9 +54,12 @@ Explore mode (free camera, clickable objects). A chapter rail switches
 between them; global controls pause, scrub, and time-warp.
 
 - **Act 0 - The Problem.** NASA's 3D JWST model at true 6.5 m scale beside
-  the ghosted outline of the roughly 90 km aperture the same image would need
-  by brute force, plus the contrast inset (a planet is about 1e10 times
-  fainter than its star; a coronagraph buys about 1e6 of that).
+  the roughly 90 km aperture the same image would need by brute force. The
+  tour pulls back at a constant zoom rate past a ladder of real sizes (ELT
+  mirror, space station, FAST dish, two bridges, Everest, the Very Large
+  Array) with a live readout of how much the view spans, plus the contrast
+  inset (a planet is about 1e10 times fainter than its star; a coronagraph
+  buys about 1e6 of that).
 - **Act 1 - Einstein's Lens.** Photon rays bending past the Sun,
   converging on the focal line that draws itself outward as impact
   parameter grows. The deflection is dramatised; alpha(b) and z(b) on
@@ -131,9 +134,12 @@ Simulated live, straight from the equations above:
 
 Dramatised, and labelled as such in-app:
 
-- **Act 0** draws JWST and the 90 km ring to one true scale (the ratio,
-  13,846 to 1, is the point), but the host star and planet in the contrast
-  inset are schematic dots.
+- **Act 0** draws JWST, the scale-ladder rings and the 90 km aperture to one
+  true scale (the ratio, 13,846 to 1, is the point). Each ladder ring is a
+  circle whose diameter is the stated size (a bridge's length, Everest's
+  height); sizes and sources are in `mission-facts.json`. The hexagonal
+  segment pattern on the 90 km aperture is illustrative, not a design, and
+  the host star and planet in the contrast inset are schematic dots.
 - **Act 1** exaggerates the deflection angle so the bend is visible at all
   (the true limb deflection is 1.75 arcsec, invisible at this zoom); the
   HUD carries the true alpha(b) and z(b), and the ribbon reads SCHEMATIC.

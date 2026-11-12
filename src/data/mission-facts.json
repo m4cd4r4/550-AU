@@ -25,6 +25,50 @@
     "starPlanetContrastRatio": 1e10,
     "coronagraphContrastLimit": 1e6
   },
+  "scaleLadder": [
+    {
+      "label": "ELT MIRROR",
+      "sizeM": 39.3,
+      "what": "Primary mirror diameter of ESO's Extremely Large Telescope",
+      "source": "https://en.wikipedia.org/wiki/Extremely_Large_Telescope"
+    },
+    {
+      "label": "SPACE STATION",
+      "sizeM": 109,
+      "what": "International Space Station, end to end",
+      "source": "https://www.nasa.gov/international-space-station/space-station-facts-and-figures/"
+    },
+    {
+      "label": "FAST RADIO DISH",
+      "sizeM": 500,
+      "what": "Dish diameter of the Five-hundred-meter Aperture Spherical Telescope",
+      "source": "https://en.wikipedia.org/wiki/Five-hundred-meter_Aperture_Spherical_Telescope"
+    },
+    {
+      "label": "SYDNEY HARBOUR BRIDGE",
+      "sizeM": 1149,
+      "what": "Total length of the bridge",
+      "source": "https://en.wikipedia.org/wiki/Sydney_Harbour_Bridge"
+    },
+    {
+      "label": "GOLDEN GATE BRIDGE",
+      "sizeM": 2737,
+      "what": "Total length, abutment to abutment",
+      "source": "https://en.wikipedia.org/wiki/Golden_Gate_Bridge"
+    },
+    {
+      "label": "HEIGHT OF EVEREST",
+      "sizeM": 8849,
+      "what": "Elevation of Mount Everest, 2020 Nepal-China survey (8,848.86 m)",
+      "source": "https://en.wikipedia.org/wiki/Mount_Everest"
+    },
+    {
+      "label": "VERY LARGE ARRAY",
+      "sizeM": 36400,
+      "what": "Widest configuration (A) of the VLA radio array, 22.62 miles across",
+      "source": "https://public.nrao.edu/telescopes/vla/"
+    }
+  ],
   "imageCylinder": {
     "proximaBDiameterAt650AUKm": 32,
     "proximaBDiameterAt1200AUKm": 57,
