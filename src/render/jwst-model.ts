@@ -129,6 +129,13 @@ export function loadJwstGltf(onLoad: (model: Group) => void): void {
     MODEL_URL,
     (gltf) => {
       const inner = gltf.scene;
+      // The sunshield layers and several struts are single-sided sheets, so
+      // seen from behind they vanish and the stars show through. Draw both faces.
+      inner.traverse((o) => {
+        if (!(o instanceof Mesh)) return;
+        const mats = Array.isArray(o.material) ? o.material : [o.material];
+        for (const m of mats) m.side = DoubleSide;
+      });
       const box = new Box3().setFromObject(inner);
       const size = box.getSize(new Vector3());
       const center = box.getCenter(new Vector3());
