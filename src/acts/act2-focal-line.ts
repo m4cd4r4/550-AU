@@ -8,13 +8,12 @@ import targetsData from '../data/targets.json';
 import { compressedMap, trueMap, type DistanceMap } from '../render/distance-map';
 import { FocalRuler } from '../render/focal-ruler';
 import { equatorialToEclipticDir, eclipticToScene } from '../render/frames';
-import { MotionStreaks } from '../render/motion-streaks';
 import { AU_M, C } from '../sim/constants';
 import { auToM, lightTimeS } from '../sim/units';
 import { scale as scaleVec, vec3d, type Vec3d } from '../sim/vec3d';
 import { formatAu, formatCompression, formatDuration, formatKmFromAu, formatMultipleOfC } from '../ui/format';
 import type { Act, ActMode, ActServices } from './act';
-import { buildCaptionEvents, END_CAPTION, INTRO_CAPTION, TOUR_DURATION_S, tourDistanceAU, tourPace } from './act2-tour';
+import { buildCaptionEvents, END_CAPTION, INTRO_CAPTION, TOUR_DURATION_S, tourDistanceAU } from './act2-tour';
 
 const COMPRESSION_D0_AU = 2;
 
@@ -34,9 +33,6 @@ export class Act2FocalLine implements Act {
   private trueScale = false;
   private mode: ActMode = 'tour';
   private readonly ruler: FocalRuler;
-  // The starfield is at infinity, so the pullback needs its own motion cue.
-  private readonly streaks = new MotionStreaks();
-  private readonly zeroV3 = new Vector3();
   private readonly dir: Vec3d;
   private readonly events = buildCaptionEvents();
   private readonly daysSinceJ2000 = (Date.now() - Date.UTC(2000, 0, 1, 12)) / 86400000;
@@ -64,7 +60,7 @@ export class Act2FocalLine implements Act {
   }
 
   enter(mode: ActMode): void {
-    this.s.scene.add(this.ruler.group, this.streaks.object);
+    this.s.scene.add(this.ruler.group);
     this.s.labels.setAnchors(this.ruler.labelAnchors());
     this.s.setActHeading(`ACT 2 / ${this.title}`, this.question);
     this.s.timeline.reset();
@@ -96,14 +92,11 @@ export class Act2FocalLine implements Act {
   }
 
   update(dtRealS: number): void {
-    let trueR: number;
-    if (this.mode === 'tour') {
-      trueR = this.updateTour(dtRealS);
-    } else {
-      trueR = this.updateExplore();
-      this.streaks.update(dtRealS, this.zeroV3, this.dirV3, 0, 1);
-    }
-    this.ruler.update(this.s.origin, this.s.camera, this.daysSinceJ2000);
+    const tour = this.mode === 'tour';
+    const trueR = tour ? this.updateTour(dtRealS) : this.updateExplore();
+    // The tour's distance markers pass a cursor at the ruler distance; Explore
+    // has no cursor, so the markers just follow the orbit focus.
+    this.ruler.update(this.s.origin, this.s.camera, this.daysSinceJ2000, trueR, tour ? trueR : null);
     this.updateHudAndRibbon(trueR);
   }
 
@@ -143,7 +136,9 @@ export class Act2FocalLine implements Act {
     // Side-on composition: camera ahead of and beside the focus, looking
     // back along the ruler so the Sun stays in frame and visibly shrinks.
     const theta = 0.85 + 0.35 * p;
-    const viewDist = 0.05 + displayR * 0.85;
+    // A portrait screen is narrow: back off so the Sun and the cursor both fit.
+    const portrait = Math.max(0, 1 - this.s.camera.aspect);
+    const viewDist = (0.05 + displayR * 0.85) * Math.max(1, 1.15 / this.s.camera.aspect);
     this.scratchV3
       .copy(this.basisSide)
       .multiplyScalar(Math.cos(theta))
@@ -156,7 +151,7 @@ export class Act2FocalLine implements Act {
     // Look at a point between the Sun and the focus so both stay framed;
     // drift toward the lens milestones for the finale
     const lookEase = p < 0.72 ? 0 : Math.min(1, (p - 0.72) / 0.2);
-    const lookFactor = 0.45 + 0.3 * lookEase * lookEase;
+    const lookFactor = 0.45 + 0.15 * portrait + 0.3 * lookEase * lookEase;
     this.lookV3.set(this.dir.x, this.dir.y, this.dir.z).multiplyScalar(displayR * lookFactor);
     this.s.origin.toScene(vec3d(this.lookV3.x, this.lookV3.y, this.lookV3.z), this.lookV3);
     // Once the outer planets are on screen, aim a touch below the focal line so
@@ -165,11 +160,6 @@ export class Act2FocalLine implements Act {
     const lift = Math.min(1, Math.max(0, (p - 0.3) / 0.2));
     this.lookV3.y -= displayR * 0.12 * lift;
     this.s.camera.lookAt(this.lookV3);
-
-    // Streaks stream back past the focus point while the tour is covering
-    // ground, and fade out where it lingers on a milestone.
-    const pace = this.s.timeline.paused || p >= 1 ? 0 : tourPace(p);
-    this.streaks.update(dtRealS, this.zeroV3, this.dirV3, pace, viewDist * 0.75);
     return r;
   }
 
@@ -292,7 +282,7 @@ export class Act2FocalLine implements Act {
   }
 
   exit(): void {
-    this.s.scene.remove(this.ruler.group, this.streaks.object);
+    this.s.scene.remove(this.ruler.group);
     this.s.renderer.domElement.removeEventListener('click', this.onClickBound);
     this.s.labels.setAnchors([]);
     this.s.captions.clear();

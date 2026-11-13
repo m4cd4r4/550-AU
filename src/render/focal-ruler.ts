@@ -28,6 +28,7 @@ import { mapPosition, type DistanceMap } from './distance-map';
 import { eclipticToScene } from './frames';
 import { planetMesh } from './planet-textures';
 import type { OriginFrame } from './floating-origin';
+import { RulerGraduations } from './ruler-graduations';
 
 export interface Milestone {
   label: string;
@@ -69,6 +70,7 @@ export class FocalRuler {
   private readonly scratch = new Vector3();
   private readonly scratchVec = vec3d();
   private daysSinceJ2000 = 0;
+  private graduations!: RulerGraduations;
 
   constructor(milestones: Milestone[], rulerDirScene: Vec3d, map: DistanceMap) {
     this.milestones = milestones;
@@ -114,6 +116,10 @@ export class FocalRuler {
     this.buildOrbits();
     this.buildKuiperAndHeliopause();
     this.buildMilestoneMarkers();
+
+    this.graduations = new RulerGraduations(this.map, this.rulerDir);
+    this.dynamic.add(this.graduations.group);
+    this.anchors.push(...this.graduations.anchors);
   }
 
   private buildAxis(): void {
@@ -226,7 +232,15 @@ export class FocalRuler {
     }
   }
 
-  update(origin: OriginFrame, camera: PerspectiveCamera, daysSinceJ2000: number): void {
+  // viewAU drives the graduations' fade; focusAU places the tour cursor
+  // (null in Explore, where there is no cursor).
+  update(
+    origin: OriginFrame,
+    camera: PerspectiveCamera,
+    daysSinceJ2000: number,
+    viewAU: number,
+    focusAU: number | null
+  ): void {
     this.daysSinceJ2000 = daysSinceJ2000;
     origin.toScene(vec3d(0, 0, 0), this.scratch);
     this.group.position.copy(this.scratch);
@@ -259,6 +273,8 @@ export class FocalRuler {
         copy(anchor.displayPos, this.scratchVec);
       }
     }
+
+    this.graduations.update(camera, this.group.position, this.map, this.rulerDir, viewAU, focusAU);
   }
 }
 
