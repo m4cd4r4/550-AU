@@ -40,6 +40,9 @@ export class Act0Problem implements Act {
   private readonly jwst = new Group();
   private readonly keyLight = new DirectionalLight(0xfff2e0, 1.3);
   private readonly fillLight = new HemisphereLight(0xbcd2ff, 0x161d29, 0.6);
+  // Opposite the key, so the sunshield's underside reads in Explore instead
+  // of a black silhouette.
+  private readonly backLight = new DirectionalLight(0xc8d4ff, 0.55);
   private readonly ladder = new ScaleLadder(facts.scaleLadder, JWST_M, APERTURE_KM * 1000);
   private readonly inset: HTMLElement;
   private readonly readout: HTMLElement;
@@ -92,7 +95,8 @@ export class Act0Problem implements Act {
     // Light the NASA model (its materials are lit; the rest of the scene is
     // unlit MeshBasic and ignores these).
     this.keyLight.position.set(6, 8, 10);
-    this.s.scene.add(this.keyLight, this.fillLight);
+    this.backLight.position.set(-6, -8, -10);
+    this.s.scene.add(this.keyLight, this.fillLight, this.backLight);
     this.s.origin.setOrigin(vec3d(0, 0, 0));
     // Act 0 has its own JWST-scale frame; the shared Sun would sit on the
     // JWST at the shared origin. Hide it; the host star is an abstraction here.
@@ -248,7 +252,7 @@ export class Act0Problem implements Act {
 
   exit(): void {
     this.s.scene.remove(this.group);
-    this.s.scene.remove(this.keyLight, this.fillLight);
+    this.s.scene.remove(this.keyLight, this.fillLight, this.backLight);
     this.inset.remove();
     this.readout.remove();
     this.s.camera.far = this.sharedFar;
