@@ -33,6 +33,7 @@ export class LabelLayer {
     const h = this.el.clientHeight;
     const placed: { x: number; y: number; w: number; h: number }[] = [];
     for (const { el, anchor } of this.items) {
+      if (el.textContent !== anchor.text) el.textContent = anchor.text; // live labels
       origin.toScene(anchor.displayPos, this.scratch).project(camera);
       const visible =
         this.scratch.z < 1 &&

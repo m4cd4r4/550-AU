@@ -10,10 +10,6 @@ import {
   Group,
   Mesh,
   MeshBasicMaterial,
-  Line,
-  LineBasicMaterial,
-  BufferGeometry,
-  BufferAttribute,
   PlaneGeometry,
   SphereGeometry,
   DoubleSide,
@@ -34,6 +30,8 @@ const ALPHA_CEN_DEC = -60.834;
 const ALPHA_CEN_DIST = 5.5; // scene units (compressed)
 const SCENE_SWITCH = 0.56; // 28 s on the link, 22 s on the black hole
 const TOUR_DURATION_S = 50;
+const LANE_OFFSET = 0.07; // scene units either side of the link
+const PULSE_ANGULAR = 0.009; // Act 4's relay uses 0.016
 
 // Radial fade for the black hole billboard: opaque over the ring, clear at
 // the edge, so the square image has no visible border.
@@ -60,10 +58,11 @@ export class Act7Epilogue implements Act {
   readonly question = 'What else does this unlock?';
 
   private readonly group = new Group();
-  private readonly relay = new LaserRelay();
+  // A two-way link: one lane outbound, one inbound, side by side.
+  private readonly lanes = [new LaserRelay(), new LaserRelay()];
   private readonly alphaCen: Mesh;
   private readonly alphaPos: Vec3d;
-  private readonly link: Line;
+  private readonly laneChains: Vec3d[][];
   private readonly sgrA = new Group();
   private sgrATexture: Texture | null = null;
   private readonly card: HTMLElement;
@@ -72,6 +71,8 @@ export class Act7Epilogue implements Act {
   private scene: 'link' | 'sgra' = 'link';
   private lastCaption = -1;
   private readonly scratchV3 = new Vector3();
+  private readonly laneLink = new Vector3();
+  private readonly laneSide = new Vector3();
 
   constructor(private readonly s: ActServices) {
     const dir = eclipticToScene(equatorialToEclipticDir(ALPHA_CEN_RA, ALPHA_CEN_DEC));
@@ -84,13 +85,13 @@ export class Act7Epilogue implements Act {
     this.alphaCen.position.set(this.alphaPos.x, this.alphaPos.y, this.alphaPos.z);
     this.group.add(this.alphaCen);
 
-    this.link = new Line(
-      lineGeometry([0, 0, 0, this.alphaPos.x, this.alphaPos.y, this.alphaPos.z]),
-      new LineBasicMaterial({ color: 0x4f9fd8, transparent: true, opacity: 0.3 })
-    );
-    this.link.frustumCulled = false;
-    this.group.add(this.link);
-    this.group.add(this.relay.group);
+    // Outbound Sun to Alpha Centauri, inbound back. placeLanes() sets the
+    // points each frame, offset either side of the link.
+    this.laneChains = [
+      [vec3d(), vec3d()],
+      [vec3d(), vec3d()]
+    ];
+    for (const lane of this.lanes) this.group.add(lane.group);
 
     this.buildSgrA();
     this.group.add(this.sgrA);
@@ -151,7 +152,7 @@ export class Act7Epilogue implements Act {
     this.s.setActHeading(`ACT 7 / ${this.title}`, this.question);
     this.s.timeline.reset();
     this.lastCaption = -1;
-    this.relay.setChain([vec3d(0, 0, 0), this.alphaPos]);
+    this.lanes.forEach((lane, i) => lane.setChain(this.laneChains[i] ?? []));
     this.s.hud.stack.appendChild(this.card);
     this.setScene('link');
     this.setMode(mode);
@@ -175,8 +176,7 @@ export class Act7Epilogue implements Act {
     this.scene = scene;
     const linkOn = scene === 'link';
     this.alphaCen.visible = linkOn;
-    this.link.visible = linkOn;
-    this.relay.group.visible = linkOn;
+    for (const lane of this.lanes) lane.group.visible = linkOn;
     this.sgrA.visible = !linkOn;
     this.s.labels.setAnchors(linkOn ? this.anchors : []);
     this.card.innerHTML = linkOn ? this.linkCard() : this.sgrCard();
@@ -214,7 +214,8 @@ export class Act7Epilogue implements Act {
       if (p >= 1) this.s.timeline.pause();
     }
     if (this.scene === 'link') {
-      this.relay.update(dtRealS, this.s.origin, this.s.camera.position, 0.02);
+      this.placeLanes();
+      for (const lane of this.lanes) lane.update(dtRealS, this.s.origin, this.s.camera.position, PULSE_ANGULAR);
       this.alphaCen.scale.setScalar(
         Math.max(1, this.scratchV3.copy(this.alphaCen.position).distanceTo(this.s.camera.position) * 0.02)
       );
@@ -224,6 +225,28 @@ export class Act7Epilogue implements Act {
       if (this.sgrATexture) this.sgrATexture.rotation += dtRealS * 0.04;
     }
     this.updateHud();
+  }
+
+  // Offset the two lanes across the line of sight, so from any camera angle
+  // they read as two parallel lines rather than one.
+  private placeLanes(): void {
+    const a = this.alphaPos;
+    this.laneLink.set(a.x, a.y, a.z);
+    this.scratchV3.set(a.x * 0.5, a.y * 0.5, a.z * 0.5).sub(this.s.camera.position);
+    this.laneSide.crossVectors(this.laneLink, this.scratchV3).normalize().multiplyScalar(LANE_OFFSET);
+    const sd = this.laneSide;
+    const [out, back] = this.laneChains;
+    if (!out || !back) return;
+    const set = (v: Vec3d | undefined, x: number, y: number, z: number, k: number): void => {
+      if (!v) return;
+      v.x = x + sd.x * k;
+      v.y = y + sd.y * k;
+      v.z = z + sd.z * k;
+    };
+    set(out[0], 0, 0, 0, 1);
+    set(out[1], a.x, a.y, a.z, 1);
+    set(back[0], a.x, a.y, a.z, -1);
+    set(back[1], 0, 0, 0, -1);
   }
 
   private runCaptions(p: number): void {
@@ -332,10 +355,4 @@ export class Act7Epilogue implements Act {
     this.s.labels.setAnchors([]);
     this.s.captions.clear();
   }
-}
-
-function lineGeometry(points: number[]): BufferGeometry {
-  const geometry = new BufferGeometry();
-  geometry.setAttribute('position', new BufferAttribute(new Float32Array(points), 3));
-  return geometry;
 }

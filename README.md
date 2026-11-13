@@ -4,7 +4,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Three.js](https://img.shields.io/badge/Three.js-0.185-000000?logo=three.js&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-42%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-45%20passing-brightgreen)
 
 Interactive real-physics visualisation of the Solar Gravitational Lens Telescope (SGLT) mission concept: solar-sail swarms flying to 650+ AU to use the Sun as a gravitational lens and image an exoplanet's surface. Named for the minimum solar gravitational focal distance, 547.8 AU.
 
@@ -150,9 +150,12 @@ Dramatised, and labelled as such in-app:
   HUD carries the true alpha(b) and z(b), and the ribbon reads SCHEMATIC.
   The photons riding the rays are a visual cue at an arbitrary pace, and
   are off under reduced motion.
-- **Act 2** adds speed streaks while the tour covers ground. They are a
-  motion cue, not dust, they follow the tour's pace and not a physical
-  speed, and they are off under reduced motion.
+- **Act 2** marks real distances on the ruler (1 AU out to 400 AU) and
+  rides a cursor along it at the tour's distance, so the sense of travel
+  comes from graduations passing the cursor. The graduations sit at their
+  true distances through the same compressed map as everything else; they
+  fade in ahead of the cursor and out well behind it so the inner ones do
+  not crowd the Sun.
 - **Act 3** draws the spacecraft far above true scale (a metre-class craft
   is sub-pixel at these distances); the HUD declares the factor and marks
   it NOT TO SCALE once only the bus remains. The sail's glow follows the
@@ -181,7 +184,8 @@ Dramatised, and labelled as such in-app:
   pixel is drawn a few screen pixels wide in the map's mean colour.
 - **Act 6** log-compresses the light-year distances so all three targets
   fit one frame; the directions are real and the ribbon says so.
-- **Act 7** is schematic: the comm link and the Sagittarius A* scene carry
+- **Act 7** is schematic: the comm link (two lanes, pulses running each
+  way, at a visual pace) and the Sagittarius A* scene carry
   the real figures on cards, with the black hole flagged as a thought
   experiment beyond current engineering. The black hole is the Event
   Horizon Telescope image with its square edge faded out and the stars
