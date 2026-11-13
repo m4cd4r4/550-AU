@@ -3,13 +3,22 @@
 
 export class Hud {
   readonly el: HTMLElement;
+  // The UI layer, for act panels that place themselves.
+  readonly root: HTMLElement;
+  // Right-hand column under the telemetry block: act panels appended here
+  // stack below it whatever its height.
+  readonly stack: HTMLElement;
   private keys: string[] = [];
   private values: HTMLElement[] = [];
 
   constructor(parent: HTMLElement) {
+    this.root = parent;
+    this.stack = document.createElement('div');
+    this.stack.className = 'hud-stack';
     this.el = document.createElement('div');
     this.el.className = 'hud panel';
-    parent.appendChild(this.el);
+    this.stack.appendChild(this.el);
+    parent.appendChild(this.stack);
   }
 
   setRows(rows: [string, string][]): void {

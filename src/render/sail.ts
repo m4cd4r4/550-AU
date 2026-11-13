@@ -6,6 +6,7 @@
 import {
   BoxGeometry,
   ConeGeometry,
+  Color,
   CylinderGeometry,
   DoubleSide,
   Group,
@@ -22,6 +23,10 @@ const PANEL_H = 40;
 const PANEL_GAP = 4;
 const WING_PANELS = facts.sundiver.sailPanelCount / 2;
 const TRUSS_LENGTH = WING_PANELS * (PANEL_W + PANEL_GAP) * 2 + 20;
+// Film colour cold and at peak heating. The cold grey is kept below the bloom
+// threshold so the sail reads as panels, not as a blown-out bar.
+const PANEL_COLD = new Color(0x8f97a1);
+const PANEL_HOT = new Color(0xff7a2a);
 
 export class SailCraft {
   readonly group = new Group();
@@ -44,9 +49,9 @@ export class SailCraft {
     truss.rotation.z = Math.PI / 2;
     this.sailAssembly.add(truss);
 
-    // Tin-coated film: bright, slightly warm reflector.
+    // Tin-coated film; setHeat warms it toward a glow near the Sun.
     this.panelMaterial = new MeshBasicMaterial({
-      color: 0xc4c9cf,
+      color: PANEL_COLD.getHex(),
       side: DoubleSide,
       transparent: true
     });
@@ -118,11 +123,19 @@ export class SailCraft {
     if (this.jettisonDrift === 0) this.sailAssembly.rotation.y = rad;
   }
 
+  // 0 = cold film, 1 = the hottest point of the pass. Visual only: the HUD
+  // carries the temperature estimate.
+  setHeat(f: number): void {
+    this.panelMaterial.color.lerpColors(PANEL_COLD, PANEL_HOT, Math.min(1, Math.max(0, f)));
+  }
+
   // Seconds since jettison; the sail drifts anti-sunward, tumbles and fades.
   setJettison(sinceS: number): void {
     this.jettisonDrift = Math.max(0, sinceS);
     if (this.jettisonDrift === 0) {
       this.sailAssembly.position.set(0, 0, 0);
+      this.sailAssembly.rotation.x = 0;
+      this.sailAssembly.visible = true;
       this.panelMaterial.opacity = 1;
       this.trussMaterial.opacity = 1;
       return;

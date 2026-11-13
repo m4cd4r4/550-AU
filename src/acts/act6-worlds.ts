@@ -41,7 +41,7 @@ interface TargetView {
 const PRIMARY = new Set(['proxima-b', 'trappist-1', 'gj-273b']);
 const FOCAL_LEN = 1.6; // exaggerated focal-line length in scene units
 const PEARLS_PER_LINE = 5;
-const TOUR_DURATION_S = 78;
+const TOUR_DURATION_S = 63; // 21 s per target
 
 // Compress light-years to a readable scene radius (log, so 4 ly and 40 ly
 // both fit while keeping their order).
@@ -115,13 +115,16 @@ export class Act6Worlds implements Act {
       this.group.add(pearl);
     }
 
-    this.anchors.push({ text: t.name.toUpperCase(), displayPos: starPos, accent: false });
+    // Lift labels clear of the star glare and of the line they name.
+    this.anchors.push({ text: t.name.toUpperCase(), displayPos: starPos, accent: false, dy: -26, nudge: true });
     // Name the pearl row at its far tip, so each row visibly belongs to the
     // star it points away from.
     this.anchors.push({
       text: `FOCAL LINE FOR ${t.name.toUpperCase()}`,
       displayPos: scaleVec(vec3d(), focalDir, FOCAL_LEN * 1.08),
-      accent: false
+      accent: false,
+      dy: -16,
+      nudge: true
     });
     return {
       id: t.id,

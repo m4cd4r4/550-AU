@@ -54,26 +54,34 @@ Explore mode (free camera, clickable objects). A chapter rail switches
 between them; global controls pause, scrub, and time-warp.
 
 - **Act 0 - The Problem.** NASA's 3D JWST model at true 6.5 m scale beside
-  the ghosted outline of the roughly 90 km aperture the same image would need
-  by brute force, plus the contrast inset (a planet is about 1e10 times
-  fainter than its star; a coronagraph buys about 1e6 of that).
+  the roughly 90 km aperture the same image would need by brute force. The
+  tour pulls back at a constant zoom rate past a ladder of real sizes (ELT
+  mirror, space station, FAST dish, two bridges, Everest, the Very Large
+  Array) with a live readout of how much the view spans, plus the contrast
+  inset (a planet is about 1e10 times fainter than its star; a coronagraph
+  buys about 1e6 of that).
 - **Act 1 - Einstein's Lens.** Photon rays bending past the Sun,
   converging on the focal line that draws itself outward as impact
-  parameter grows. The deflection is dramatised; alpha(b) and z(b) on
+  parameter grows, with a photon riding each ray. The deflection is dramatised; alpha(b) and z(b) on
   the HUD are the true values.
 - **Act 2 - The Focal Line.** A story-paced pullback from the Sun to the
   gravitational focus along a compressed ruler, with the planets on their
   orbits as real textured surfaces, the Kuiper belt, the heliopause,
   Voyager 1, and the two lens milestones.
 - **Act 3 - The Sundiver.** The integrated trajectory: sail deployment,
-  perihelion slingshot at 0.1 AU, jettison at year 2, and a speed race
-  against Voyager 1 and chemical propulsion.
+  a close-up of the perihelion slingshot at 0.1 AU with the sail turning
+  face-on and heating, jettison at year 2, and a speed race against
+  Voyager 1 and chemical propulsion, with the distances it passes marked
+  on the trail.
 - **Act 4 - The String of Pearls.** Yearly launches marching out at
   ~25 AU spacing, the pearl inspector (six CubeSats to a 1 m telescope),
-  and the laser relay hopping images home.
+  and the laser relay hopping images home. The tour keeps a close-up of
+  the lead pearl on screen beside the wide view.
 - **Act 5 - Imaging the Ring.** The payoff: the live lensing shader at
   true angular scale, the 32 km image cylinder, the four-telescope raster
   dance with corona subtraction, and the map reconstructing pixel by pixel.
+  The tour ends on the finished map at full size beside JWST's view of the
+  same planet: one pixel.
 - **Act 6 - Many Worlds.** The real stellar neighbourhood, with focal
   lines radiating anti-target for Proxima b, TRAPPIST-1 and GJ 273b.
 - **Act 7 - Epilogue.** The lens works both ways: a Sun-to-Alpha-Centauri
@@ -131,15 +139,28 @@ Simulated live, straight from the equations above:
 
 Dramatised, and labelled as such in-app:
 
-- **Act 0** draws JWST and the 90 km ring to one true scale (the ratio,
-  13,846 to 1, is the point), but the host star and planet in the contrast
-  inset are schematic dots.
+- **Act 0** draws JWST, the scale-ladder rings and the 90 km aperture to one
+  true scale (the ratio, 13,846 to 1, is the point). Each ladder ring is a
+  circle whose diameter is the stated size (a bridge's length, Everest's
+  height); sizes and sources are in `mission-facts.json`. The hexagonal
+  segment pattern on the 90 km aperture is illustrative, not a design, and
+  the host star and planet in the contrast inset are schematic dots.
 - **Act 1** exaggerates the deflection angle so the bend is visible at all
   (the true limb deflection is 1.75 arcsec, invisible at this zoom); the
   HUD carries the true alpha(b) and z(b), and the ribbon reads SCHEMATIC.
+  The photons riding the rays are a visual cue at an arbitrary pace, and
+  are off under reduced motion.
+- **Act 2** adds speed streaks while the tour covers ground. They are a
+  motion cue, not dust, they follow the tour's pace and not a physical
+  speed, and they are off under reduced motion.
 - **Act 3** draws the spacecraft far above true scale (a metre-class craft
   is sub-pixel at these distances); the HUD declares the factor and marks
-  it NOT TO SCALE once only the bus remains. The sail lightness number is a
+  it NOT TO SCALE once only the bus remains. The sail's glow follows the
+  temperature estimate on the HUD but its colour is illustrative. The speed
+  streaks are a motion cue, not dust, and are off under reduced motion. The
+  trail markers sit where the integrated path crosses each distance; the
+  Voyager 1 marker shows how far out Voyager 1 is, not its direction, which
+  is well out of this plane. The sail lightness number is a
   tuned effective parameter (recorded in `mission-facts.json`), because the
   published exit speed exceeds what the quoted sail loading gives
   physically. The published timeline figures are quoted as claims; the
@@ -147,18 +168,24 @@ Dramatised, and labelled as such in-app:
   `docs/BUILD-PROMPT.md`.
 - **Act 4** compresses the 25 AU pearl spacing for the frame; the ribbon
   declares the compression, and the true spacing is on the HUD. The laser
-  pulse cadence is visual; the true 13 h transmit and 3.2 day light lag are
-  on the HUD and captions.
+  pulse cadence and pulse size are visual; the true 13 h transmit and
+  3.2 day light lag are on the HUD and captions. The lead pearl's close-up
+  is held in front of the camera as an inset and labelled not to scale.
 - **Act 5** exaggerates the source-planet angular size and the J2 caustic
   strength for visibility (both stated on the HUD), draws the imaging grid
   far coarser than the true 1000 x 1000 raster (declared), and reconstructs
   the map as a progressive reveal standing in for the deconvolution. The
-  planet surface is procedural and watermarked speculative throughout.
+  planet surface is procedural and watermarked speculative throughout. The
+  closing comparison is schematic and the ribbon says so: the map is shown
+  at screen resolution, not its full 1000 x 1000 pixels, and JWST's one
+  pixel is drawn a few screen pixels wide in the map's mean colour.
 - **Act 6** log-compresses the light-year distances so all three targets
   fit one frame; the directions are real and the ribbon says so.
 - **Act 7** is schematic: the comm link and the Sagittarius A* scene carry
   the real figures on cards, with the black hole flagged as a thought
-  experiment beyond current engineering.
+  experiment beyond current engineering. The black hole is the Event
+  Horizon Telescope image with its square edge faded out and the stars
+  behind it masked.
 
 ## Architecture notes
 

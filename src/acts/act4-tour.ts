@@ -6,7 +6,7 @@ import facts from '../data/mission-facts.json';
 import type { SundiverTrajectory } from '../sim/sundiver';
 import { YEAR_S } from '../sim/constants';
 
-export const TOUR_DURATION_S = 95;
+export const TOUR_DURATION_S = 80;
 export const TOUR_END_YEARS = 30;
 
 // [progress, mission years]: slow through the first launches, quick through
@@ -15,7 +15,7 @@ const WAYPOINTS: [number, number][] = [
   [0, 0],
   [0.14, 2.5],
   [0.3, 8],
-  [0.52, 18],
+  [0.55, 18],
   [0.68, 25],
   [0.8, 27],
   [1, TOUR_END_YEARS]

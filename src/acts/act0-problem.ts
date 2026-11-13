@@ -2,22 +2,17 @@
 // ghosted outline of the roughly 90 km aperture the same image would need
 // by brute force, plus the contrast inset: a planet is about 1e10 times
 // fainter than its star, and a coronagraph only buys about 1e6 of that.
-// The aperture ring is drawn to the same scale as JWST and dwarfs the frame;
-// that is the point, and the scale is stated.
+// The aperture is drawn to the same scale as JWST and dwarfs the frame; that
+// is the point, and the scale is stated. The tour pulls back at a constant
+// zoom rate (each tenfold step takes equal time) past a ladder of real,
+// sourced sizes, with a live readout of how much the view spans.
 
-import {
-  BufferAttribute,
-  BufferGeometry,
-  DirectionalLight,
-  Group,
-  HemisphereLight,
-  Line,
-  LineBasicMaterial
-} from 'three';
+import { DirectionalLight, Group, HemisphereLight } from 'three';
 import facts from '../data/mission-facts.json';
 import { vec3d } from '../sim/vec3d';
 import { buildJwstModel, loadJwstGltf } from '../render/jwst-model';
 import type { LabelAnchor } from '../render/focal-ruler';
+import { formatSize, ScaleLadder } from '../render/scale-ladder';
 import type { Act, ActMode, ActServices } from './act';
 
 // JWST primary is 6.5 m; the aperture the lens replaces is ~90 km. Draw both
@@ -26,7 +21,14 @@ import type { Act, ActMode, ActServices } from './act';
 const JWST_M = facts.problem.jwstApertureM;
 const APERTURE_KM = facts.problem.requiredApertureKm;
 const RING_RADIUS = ((APERTURE_KM * 1000) / JWST_M) / 2;
-const TOUR_DURATION_S = 60;
+const TOUR_DURATION_S = 35;
+// Tour beats as fractions of the act: hold on JWST, zoom out, rest on the ring.
+const ZOOM_START_P = 0.08;
+const ZOOM_END_P = 0.86;
+const START_DIST = 3.2;
+// The finished frame is this much wider than the ring, so it clears the chrome.
+const FIT_MARGIN = 1.3;
+const FAR_PLANE = 80000; // a portrait frame needs to stand further back than the shared far plane
 const JWST_IMG = `${import.meta.env.BASE_URL}assets/renders/jwst.jpg`;
 
 export class Act0Problem implements Act {
@@ -38,8 +40,13 @@ export class Act0Problem implements Act {
   private readonly jwst = new Group();
   private readonly keyLight = new DirectionalLight(0xfff2e0, 1.3);
   private readonly fillLight = new HemisphereLight(0xbcd2ff, 0x161d29, 0.6);
-  private readonly ring: Line;
+  private readonly ladder = new ScaleLadder(facts.scaleLadder, JWST_M, APERTURE_KM * 1000);
   private readonly inset: HTMLElement;
+  private readonly readout: HTMLElement;
+  private readonly readoutValue: HTMLElement;
+  private readonly readoutBar: HTMLElement;
+  private loupeShown = false;
+  private sharedFar = 0;
   private readonly anchors: LabelAnchor[];
   private mode: ActMode = 'tour';
   private lastCaption = -1;
@@ -54,28 +61,22 @@ export class Act0Problem implements Act {
     });
     this.group.add(this.jwst);
 
-    // 90 km aperture as a ghosted ring, concentric with the JWST mirror.
-    const segments = 160;
-    const pts = new Float32Array((segments + 1) * 3);
-    for (let i = 0; i <= segments; i++) {
-      const a = (i / segments) * Math.PI * 2;
-      pts[i * 3] = Math.cos(a) * RING_RADIUS;
-      pts[i * 3 + 1] = Math.sin(a) * RING_RADIUS;
-      pts[i * 3 + 2] = 0;
-    }
-    const ringGeometry = new BufferGeometry();
-    ringGeometry.setAttribute('position', new BufferAttribute(pts, 3));
-    this.ring = new Line(
-      ringGeometry,
-      new LineBasicMaterial({ color: 0xffb000, transparent: true, opacity: 0.5 })
-    );
-    this.ring.frustumCulled = false;
-    this.group.add(this.ring);
+    this.group.add(this.ladder.group);
 
     this.anchors = [
       { text: `JWST ${JWST_M} m`, displayPos: vec3d(2.5, 1.5, 0), accent: false },
-      { text: `APERTURE NEEDED ${APERTURE_KM} km`, displayPos: vec3d(0, RING_RADIUS * 1.02, 0), accent: true }
+      ...this.ladder.anchors
     ];
+
+    this.readout = document.createElement('div');
+    this.readout.className = 'frame-readout panel';
+    this.readout.innerHTML = `
+      <div class="k">THIS VIEW SPANS</div>
+      <div class="v"></div>
+      <div class="bar"><i></i></div>
+      <div class="k">MIRROR NEEDED <b>${APERTURE_KM} km</b></div>`;
+    this.readoutValue = this.readout.querySelector('.v') as HTMLElement;
+    this.readoutBar = this.readout.querySelector('.bar i') as HTMLElement;
 
     this.inset = document.createElement('div');
     this.inset.className = 'contrast-inset panel';
@@ -100,9 +101,13 @@ export class Act0Problem implements Act {
     this.s.timeline.reset();
     this.lastCaption = -1;
     this.endShown = false;
-    (this.s.hud.el.parentElement ?? document.body).appendChild(this.inset);
+    this.s.hud.root.appendChild(this.inset);
+    this.s.hud.stack.appendChild(this.readout);
     this.s.labels.setAnchors(this.anchors);
-    this.s.loupe.show(JWST_IMG, 'JAMES WEBB SPACE TELESCOPE', '6.5 m mirror');
+    this.loupeShown = false;
+    this.sharedFar = this.s.camera.far;
+    this.s.camera.far = FAR_PLANE;
+    this.s.camera.updateProjectionMatrix();
     this.setMode(mode);
   }
 
@@ -126,7 +131,7 @@ export class Act0Problem implements Act {
     return Math.min(1, this.s.timeline.seconds / TOUR_DURATION_S);
   }
 
-  update(): void {
+  update(dtRealS: number): void {
     if (this.mode === 'tour') {
       const p = this.progress();
       this.placeTourCamera(p);
@@ -136,29 +141,53 @@ export class Act0Problem implements Act {
         this.s.timeline.pause();
       }
     }
-    // Ring fades in as the camera pulls back to reveal its scale.
     const camDist = this.s.camera.position.length();
-    (this.ring.material as LineBasicMaterial).opacity = Math.min(
-      0.5,
-      Math.max(0, (camDist - 6) / RING_RADIUS)
-    );
+    const span = camDist * this.spanPerDist();
+    this.ladder.update(span, dtRealS, this.s.camera.aspect < 1);
+
+    // The loupe keeps JWST in view while it shrinks to a dot, then clears
+    // the frame for the ring's arrival.
+    const wantLoupe = span < RING_RADIUS;
+    if (wantLoupe !== this.loupeShown) {
+      this.loupeShown = wantLoupe;
+      if (wantLoupe) this.s.loupe.show(JWST_IMG, 'JAMES WEBB SPACE TELESCOPE', `${JWST_M} m mirror`);
+      else this.s.loupe.hide();
+    }
+
+    const startSpan = START_DIST * this.spanPerDist();
+    const endSpan = RING_RADIUS * 2 * FIT_MARGIN;
+    const filled = Math.log(span / startSpan) / Math.log(endSpan / startSpan);
+    this.readoutValue.textContent = formatSize(span * JWST_M);
+    this.readoutBar.style.width = `${(Math.min(1, Math.max(0, filled)) * 100).toFixed(1)}%`;
     this.updateHud(camDist);
   }
 
+  // Scene units spanned by the shorter frame dimension, per unit of camera distance.
+  private spanPerDist(): number {
+    const tanHalf = Math.tan((this.s.camera.fov * Math.PI) / 360);
+    return 2 * tanHalf * Math.min(1, this.s.camera.aspect);
+  }
+
   private placeTourCamera(p: number): void {
-    // Hold on the JWST mirror, then pull back hard to reveal the whole 90 km
-    // ring. Cubic easing keeps the craft readable through the first third;
-    // the final distance frames the full ring inside the field of view.
-    const dist = 3.2 + Math.pow(p, 3) * RING_RADIUS * 2.6;
+    // Hold on the JWST mirror, then pull back at a constant zoom rate until
+    // the whole 90 km ring sits inside the shorter frame dimension. Constant
+    // rate in log distance means each tenfold step takes the same time; only
+    // the first and last tenth ease, so the move does not jerk.
+    const f = Math.min(1, Math.max(0, (p - ZOOM_START_P) / (ZOOM_END_P - ZOOM_START_P)));
+    const k = 0.1;
+    const v = 1 / (1 - k);
+    const z = f < k ? (v * f * f) / (2 * k) : f > 1 - k ? 1 - (v * (1 - f) * (1 - f)) / (2 * k) : v * (f - k / 2);
+    const endDist = (RING_RADIUS * 2 * FIT_MARGIN) / this.spanPerDist();
+    const dist = START_DIST * Math.pow(endDist / START_DIST, z);
     this.s.camera.position.set(Math.sin(p * 0.8) * dist * 0.06, dist * 0.05, dist);
     this.s.camera.lookAt(0, 0, 0);
   }
 
   private runCaptions(p: number): void {
     const beats = [
-      { at: 0.02, text: `JWST sees exoplanets as unresolved points. Its mirror is ${JWST_M} metres across.` },
-      { at: 0.4, text: `To resolve a planet's surface by aperture alone you would need a mirror about ${APERTURE_KM} km wide.` },
-      { at: 0.75, text: 'The Sun already is that lens. You just have to travel to its focus.' }
+      { at: 0.015, text: `JWST sees exoplanets as unresolved points. Its mirror is ${JWST_M} metres across.` },
+      { at: 0.2, text: `To resolve a planet's surface by aperture alone you would need a mirror about ${APERTURE_KM} km wide.` },
+      { at: 0.84, text: 'The Sun already is that lens. You just have to travel to its focus.' }
     ];
     for (let i = 0; i < beats.length; i++) {
       const beat = beats[i];
@@ -221,6 +250,9 @@ export class Act0Problem implements Act {
     this.s.scene.remove(this.group);
     this.s.scene.remove(this.keyLight, this.fillLight);
     this.inset.remove();
+    this.readout.remove();
+    this.s.camera.far = this.sharedFar;
+    this.s.camera.updateProjectionMatrix();
     this.s.labels.setAnchors([]);
     this.s.captions.clear();
     this.s.loupe.hide();

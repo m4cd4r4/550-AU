@@ -7,6 +7,8 @@
   --value: #f2f6fa;
   --accent: #ffb000;
   --accent-dim: rgba(255, 176, 0, 0.14);
+  --rail-w: 204px;
+  --rail-gap: 216px;
   --mono: ui-monospace, 'Cascadia Mono', 'JetBrains Mono', Consolas, 'Courier New', monospace;
 }
 
@@ -27,7 +29,7 @@ body {
 }
 
 #app,
-#app canvas {
+#app > canvas {
   position: fixed;
   inset: 0;
 }
@@ -77,14 +79,14 @@ body {
   padding: 9px 14px;
   border-right: 1px solid var(--border);
   color: var(--value);
-  font-size: 13px;
+  font-size: 14px;
   letter-spacing: 0.14em;
   white-space: nowrap;
 }
 
 .brand .sub {
   color: var(--text-dim);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.18em;
   display: block;
   margin-top: 1px;
@@ -97,16 +99,29 @@ body {
 }
 
 .act-heading .act-name {
-  font-size: 12px;
+  font-size: 14px;
   letter-spacing: 0.12em;
   color: var(--accent);
 }
 
 .act-heading .act-question {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--text-dim);
   letter-spacing: 0.06em;
   margin-top: 2px;
+}
+
+.chapter-select {
+  display: none;
+  max-width: 100%;
+  padding: 5px 6px;
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  pointer-events: auto;
 }
 
 .mode-toggle {
@@ -117,7 +132,7 @@ body {
 }
 
 .mode-toggle button {
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.12em;
   padding: 6px 14px;
 }
@@ -133,7 +148,7 @@ body {
   left: 0;
   top: 54px;
   bottom: 0;
-  width: 168px;
+  width: var(--rail-w);
   padding: 12px 0;
   border-right: 1px solid var(--border);
   background: var(--panel);
@@ -148,8 +163,8 @@ body {
   border: none;
   border-left: 2px solid transparent;
   padding: 8px 12px;
-  font-size: 10px;
-  letter-spacing: 0.1em;
+  font-size: 12px;
+  letter-spacing: 0.08em;
   color: var(--text-dim);
 }
 
@@ -171,18 +186,26 @@ body {
 
 .chapter-rail .chapter .tag {
   float: right;
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.08em;
   color: var(--text-dim);
   border: 1px solid var(--border);
   padding: 1px 4px;
 }
 
-.hud {
+.hud-stack {
   position: absolute;
   top: 66px;
   right: 12px;
-  min-width: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.hud {
+  min-width: 300px;
   padding: 10px 12px;
   pointer-events: auto;
 }
@@ -191,15 +214,15 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 18px;
-  padding: 2.5px 0;
-  font-size: 11px;
+  padding: 3px 0;
+  font-size: 13px;
 }
 
 .hud .row .k {
   color: var(--text-dim);
-  font-size: 9px;
-  letter-spacing: 0.1em;
-  padding-top: 2px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  padding-top: 1px;
 }
 
 .hud .row .v {
@@ -213,16 +236,16 @@ body {
   bottom: 92px;
   left: 50%;
   transform: translateX(-50%);
-  max-width: 620px;
+  max-width: 800px;
   text-align: center;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 19px;
+  line-height: 1.45;
   color: var(--value);
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.9);
   opacity: 0;
   transition: opacity 0.6s ease;
   pointer-events: none;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.01em;
 }
 
 .captions.visible {
@@ -231,13 +254,13 @@ body {
 
 .scale-ribbon {
   position: absolute;
-  left: 180px;
+  left: var(--rail-gap);
   bottom: 12px;
   display: flex;
   align-items: center;
   gap: 14px;
   padding: 8px 12px;
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   pointer-events: auto;
 }
@@ -256,7 +279,7 @@ body {
 }
 
 .scale-ribbon button {
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.1em;
   padding: 4px 10px;
 }
@@ -278,7 +301,7 @@ body {
 }
 
 .time-controls button {
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   padding: 5px 12px;
   min-width: 58px;
@@ -300,23 +323,63 @@ body {
 .labels .label {
   position: absolute;
   transform: translate(10px, -50%);
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  color: var(--text-dim);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--text);
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95);
   white-space: nowrap;
 }
 
 .labels .label.accent {
   color: var(--accent);
-  font-size: 10px;
+  font-size: 13px;
+}
+
+.labels .label.center {
+  transform: translate(-50%, 0);
+}
+
+/* Act 0: how much the view spans, counting up to the 90 km aperture. */
+.frame-readout {
+  padding: 10px 16px 11px;
+  text-align: center;
+}
+
+.frame-readout .k {
+  color: var(--text-dim);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+}
+
+.frame-readout .k b {
+  color: var(--accent);
+  font-weight: normal;
+}
+
+.frame-readout .v {
+  color: var(--value);
+  font-size: 34px;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+}
+
+.frame-readout .bar {
+  height: 3px;
+  margin: 5px 0 8px;
+  background: var(--border);
+}
+
+.frame-readout .bar i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
 }
 
 .inspector {
   position: absolute;
   right: 12px;
   bottom: 64px;
-  width: 250px;
+  width: 300px;
   padding: 10px 12px;
   display: none;
   pointer-events: auto;
@@ -328,7 +391,7 @@ body {
 
 .inspector .title {
   color: var(--accent);
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 0.12em;
   margin-bottom: 6px;
 }
@@ -337,7 +400,7 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 14px;
-  font-size: 10px;
+  font-size: 12px;
   padding: 2px 0;
 }
 
@@ -356,7 +419,7 @@ body {
   top: 6px;
   right: 8px;
   border: none;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--text-dim);
 }
 
@@ -364,36 +427,48 @@ body {
   .chapter-rail {
     display: none;
   }
+  .chapter-select {
+    display: block;
+  }
+  .act-heading .act-name,
+  .act-heading .act-question {
+    display: none;
+  }
   .scale-ribbon {
+    left: 12px;
+  }
+  .contrast-inset {
     left: 12px;
   }
   .hud {
     min-width: 0;
   }
+  .hud-stack {
+    align-items: flex-end;
+  }
 }
 
 .race-chart {
-  position: absolute;
-  right: 12px;
-  top: 332px;
   padding: 8px 10px 6px;
   pointer-events: auto;
 }
 
-.race-chart .chart-title {
+.chart-title {
   color: var(--text-dim);
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.14em;
   margin-bottom: 4px;
 }
 
 .recon-panel {
-  position: absolute;
-  right: 12px;
-  top: 296px;
-  width: 258px;
+  align-self: flex-end;
   padding: 8px 10px 6px;
   pointer-events: auto;
+}
+
+.race-chart canvas {
+  display: block;
+  margin: 0 auto;
 }
 
 .recon-panel canvas {
@@ -404,16 +479,113 @@ body {
 .recon-panel .recon-status {
   margin-top: 4px;
   color: var(--text-dim);
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.06em;
+}
+
+/* Act 5 finale: the finished map beside JWST's one pixel. It sits under the
+   captions and bottom controls and over the scene, labels and telemetry. */
+.finale {
+  --finale-size: min(100vh - 310px, (100vw - var(--rail-w) - 120px) / 2, 820px);
+  position: absolute;
+  top: 54px;
+  left: var(--rail-w);
+  right: 0;
+  bottom: 0;
+  padding-bottom: 170px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  background: var(--bg);
+}
+
+.finale-fig {
+  width: var(--finale-size);
+}
+
+.finale-title {
+  color: var(--accent);
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  margin-bottom: 10px;
+}
+
+.finale-note {
+  color: var(--text-dim);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  margin-top: 8px;
+}
+
+.finale-frame {
+  width: var(--finale-size);
+  height: var(--finale-size);
+  border: 1px solid var(--border);
+  background: #05070b;
+}
+
+.finale-frame canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.finale-pixel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.finale-pixel i {
+  width: 6px;
+  height: 6px;
+}
+
+/* Keep both titles on one line so the two frames stay level. */
+@media (max-width: 1100px) {
+  .finale-title {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+  }
+}
+
+@media (max-width: 900px) {
+  .finale {
+    --finale-size: min(100vh - 310px, (100vw - 72px) / 2);
+    left: 0;
+    gap: 24px;
+  }
+}
+
+/* Portrait phone: stack, and give the room to the map. */
+@media (max-width: 720px) {
+  .finale {
+    --finale-size: min(100vw - 32px, 100vh - 500px);
+    top: 40px;
+    flex-direction: column;
+    gap: 14px;
+    padding-bottom: 196px;
+  }
+  .finale-title {
+    margin-bottom: 6px;
+  }
+  .finale-note {
+    font-size: 12px;
+    margin-top: 5px;
+  }
+  .finale-pixel {
+    width: 96px;
+    height: 96px;
+  }
 }
 
 .contrast-inset {
   position: absolute;
-  left: 180px;
+  left: var(--rail-gap);
   /* Clear of the centred captions, which reach this far left on a 1440 screen */
   bottom: 140px;
-  width: 300px;
+  width: 340px;
   padding: 9px 12px 10px;
   pointer-events: auto;
 }
@@ -422,7 +594,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: 13px;
   padding: 3px 0;
 }
 
@@ -452,15 +624,14 @@ body {
   padding-top: 6px;
   border-top: 1px solid var(--border);
   color: var(--text-dim);
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.5;
 }
 
+/* Sits in the right-hand column under the telemetry, clear of the captions
+   and of the scene's subject. */
 .epilogue-card {
-  position: absolute;
-  left: 180px;
-  bottom: 56px;
-  width: 320px;
+  width: 360px;
   padding: 9px 12px 10px;
   pointer-events: auto;
 }
@@ -469,7 +640,7 @@ body {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  font-size: 11px;
+  font-size: 13px;
   padding: 3px 0;
 }
 
@@ -484,7 +655,7 @@ body {
   padding-top: 6px;
   border-top: 1px solid var(--border);
   color: var(--text-dim);
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.5;
 }
 
@@ -498,7 +669,7 @@ body {
   border: none;
   border-left: 1px solid var(--border);
   padding: 0 14px;
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   color: var(--text-dim);
 }
@@ -543,21 +714,21 @@ body {
 
 .credits-title {
   color: var(--value);
-  font-size: 13px;
+  font-size: 15px;
   letter-spacing: 0.1em;
 }
 
 .credits-sub {
   margin-top: 4px;
   color: var(--text-dim);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .credits-close {
   position: absolute;
   top: -2px;
   right: 0;
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   padding: 4px 10px;
 }
@@ -568,7 +739,7 @@ body {
   gap: 10px;
   padding: 7px 0;
   border-bottom: 1px solid rgba(27, 36, 48, 0.5);
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .credits-asset {
@@ -593,7 +764,7 @@ body {
 .credits-foot {
   margin-top: 10px;
   color: var(--text-dim);
-  font-size: 9px;
+  font-size: 12px;
 }
 
 /* Responsive degradation. Desktop-first; these keep the instrument chrome
@@ -613,50 +784,72 @@ body {
 @media (max-width: 720px) {
   .brand {
     padding: 8px 10px;
-    font-size: 11px;
+    font-size: 12px;
   }
   .brand .sub {
     display: none;
   }
   .act-heading {
-    padding: 8px 10px;
+    padding: 5px 8px;
   }
-  .act-heading .act-name {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: 11px;
-  }
-  .act-heading .act-question {
+  /* Tour only on phones: the Explore toggle gives its room to the picker. */
+  .mode-toggle {
     display: none;
   }
-  .mode-toggle {
-    padding: 0 6px;
-    gap: 4px;
-  }
-  .mode-toggle button,
   .topbar .util button {
-    padding: 6px 8px;
-    font-size: 9px;
+    padding: 6px 9px;
+    font-size: 11px;
+  }
+  .chapter-select {
+    font-size: 12px;
+    letter-spacing: 0.02em;
+  }
+  .hud-stack {
+    top: 46px;
+    right: 8px;
+    max-width: 68vw;
+    gap: 6px;
   }
   .hud {
-    top: 46px;
-    min-width: 0;
-    max-width: 62vw;
-    font-size: 10px;
+    padding: 7px 9px;
+  }
+  .hud .row {
+    font-size: 12px;
+    gap: 10px;
+    padding: 1.5px 0;
+  }
+  .hud .row .k {
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+  .hud .row .v {
+    white-space: normal;
+  }
+  .frame-readout {
+    padding: 6px 10px 7px;
+  }
+  .frame-readout .v {
+    font-size: 24px;
+  }
+  .frame-readout .bar {
+    margin: 3px 0 5px;
   }
   .scale-ribbon {
-    left: 12px;
-    right: 12px;
-    bottom: 66px;
+    left: 8px;
+    right: 8px;
+    bottom: 62px;
     justify-content: flex-start;
     flex-wrap: wrap;
-    gap: 6px 12px;
+    gap: 4px 12px;
+    font-size: 11px;
+  }
+  .scale-ribbon button {
+    display: none;
   }
   .time-controls {
-    left: 12px;
-    right: 12px;
-    bottom: 12px;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
     justify-content: flex-end;
   }
   .time-controls input[type='range'] {
@@ -671,9 +864,14 @@ body {
     display: none;
   }
   .captions {
-    bottom: 132px;
-    max-width: 88vw;
-    font-size: 12px;
+    bottom: 124px;
+    width: 92vw;
+    max-width: 92vw;
+    font-size: 15px;
+  }
+  .labels .label {
+    font-size: 11px;
+    letter-spacing: 0.04em;
   }
 }
 
@@ -685,6 +883,7 @@ body {
 .chapter-rail .chapter:focus-visible,
 .credits-close:focus-visible,
 .credits-source a:focus-visible,
+.chapter-select:focus-visible,
 input[type='range']:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -693,7 +892,7 @@ input[type='range']:focus-visible {
 /* Spacecraft loupe: a circular magnifier for real NASA renders. */
 .loupe {
   position: absolute;
-  left: 180px;
+  left: var(--rail-gap);
   top: 88px;
   width: clamp(150px, 17vw, 214px);
   pointer-events: none;
@@ -746,7 +945,7 @@ input[type='range']:focus-visible {
 .loupe-label b {
   display: block;
   color: var(--accent);
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 0.14em;
   font-weight: normal;
 }
@@ -754,7 +953,7 @@ input[type='range']:focus-visible {
 .loupe-label span {
   display: block;
   color: var(--text-dim);
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.04em;
   margin-top: 3px;
 }

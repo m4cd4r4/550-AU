@@ -123,8 +123,10 @@ export class ReconPanel {
     }
 
     // The surface is procedural: watermark the image itself.
-    ctx.font = '9px ui-monospace, monospace';
-    ctx.fillStyle = 'rgba(242, 246, 250, 0.75)';
+    ctx.font = '12px ui-monospace, monospace';
+    ctx.fillStyle = 'rgba(5, 7, 11, 0.72)'; // the ice cap is white: back the text
+    ctx.fillRect(4, PANEL_PX - 22, ctx.measureText('SPECULATIVE').width + 8, 18);
+    ctx.fillStyle = 'rgba(242, 246, 250, 0.92)';
     ctx.fillText('SPECULATIVE', 8, PANEL_PX - 8);
 
     const map = facts.imageCylinder;

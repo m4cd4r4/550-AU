@@ -6,6 +6,7 @@
 
 import {
   AdditiveBlending,
+  CanvasTexture,
   Group,
   Mesh,
   MeshBasicMaterial,
@@ -31,8 +32,27 @@ import type { Act, ActMode, ActServices } from './act';
 const ALPHA_CEN_RA = 219.902;
 const ALPHA_CEN_DEC = -60.834;
 const ALPHA_CEN_DIST = 5.5; // scene units (compressed)
-const SCENE_SWITCH = 0.5;
-const TOUR_DURATION_S = 64;
+const SCENE_SWITCH = 0.56; // 28 s on the link, 22 s on the black hole
+const TOUR_DURATION_S = 50;
+
+// Radial fade for the black hole billboard: opaque over the ring, clear at
+// the edge, so the square image has no visible border.
+function discMask(): CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 128;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+    g.addColorStop(0, '#fff');
+    g.addColorStop(0.62, '#fff');
+    g.addColorStop(0.96, '#000');
+    g.addColorStop(1, '#000');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 128, 128);
+  }
+  return new CanvasTexture(canvas);
+}
 
 export class Act7Epilogue implements Act {
   readonly id = 7;
@@ -76,7 +96,9 @@ export class Act7Epilogue implements Act {
     this.group.add(this.sgrA);
 
     this.anchors = [
-      { text: 'SUN (LENS)', displayPos: vec3d(0, -0.28, 0), accent: false },
+      // Centred under the Sun: to its right it runs under the panels on a
+      // narrow screen.
+      { text: 'SUN (LENS)', displayPos: vec3d(0, -0.28, 0), accent: false, align: 'center' },
       { text: 'ALPHA CENTAURI (LENS)', displayPos: this.alphaPos, accent: true }
     ];
 
@@ -90,13 +112,23 @@ export class Act7Epilogue implements Act {
     // camera-facing billboard with additive blending so the dark background
     // drops into space and only the hot ring glows. Faces +z; the act aims
     // it at the camera each frame and slowly rotates the disc.
+    const mask = discMask();
     const mat = new MeshBasicMaterial({
       color: 0x000000,
+      alphaMap: mask,
       transparent: true,
       depthWrite: false,
       blending: AdditiveBlending,
       side: DoubleSide
     });
+    // A black disc behind the image, so the starfield does not shine through
+    // the hole's shadow.
+    const backing = new Mesh(
+      new PlaneGeometry(3, 3),
+      new MeshBasicMaterial({ color: 0x000000, alphaMap: mask, transparent: true, depthWrite: false, side: DoubleSide })
+    );
+    backing.renderOrder = 1;
+    this.sgrA.add(backing);
     new TextureLoader().load(`${import.meta.env.BASE_URL}assets/renders/sgra.jpg`, (tex) => {
       tex.center.set(0.5, 0.5);
       this.sgrATexture = tex;
@@ -107,6 +139,7 @@ export class Act7Epilogue implements Act {
       mat.needsUpdate = true;
     });
     const disc = new Mesh(new PlaneGeometry(3, 3), mat);
+    disc.renderOrder = 2;
     this.sgrA.add(disc);
     this.sgrA.position.set(0, 0, -4);
     this.sgrA.visible = false;
@@ -119,7 +152,7 @@ export class Act7Epilogue implements Act {
     this.s.timeline.reset();
     this.lastCaption = -1;
     this.relay.setChain([vec3d(0, 0, 0), this.alphaPos]);
-    (this.s.hud.el.parentElement ?? document.body).appendChild(this.card);
+    this.s.hud.stack.appendChild(this.card);
     this.setScene('link');
     this.setMode(mode);
   }
@@ -181,7 +214,7 @@ export class Act7Epilogue implements Act {
       if (p >= 1) this.s.timeline.pause();
     }
     if (this.scene === 'link') {
-      this.relay.update(dtRealS, this.s.origin, Math.max(0.02, this.s.camera.position.length() * 0.02));
+      this.relay.update(dtRealS, this.s.origin, this.s.camera.position, 0.02);
       this.alphaCen.scale.setScalar(
         Math.max(1, this.scratchV3.copy(this.alphaCen.position).distanceTo(this.s.camera.position) * 0.02)
       );
@@ -212,11 +245,25 @@ export class Act7Epilogue implements Act {
   private placeTourCamera(p: number): void {
     if (p < SCENE_SWITCH) {
       const a = 0.6 + p * 1.5;
-      this.s.camera.position.set(Math.sin(a) * 5.5, 2 + p, Math.cos(a) * 5.5);
+      // Far enough back that both stars fit a narrow screen.
+      const dist = 7 * Math.max(1, 0.95 / this.s.camera.aspect);
+      this.s.camera.position.set(Math.sin(a) * dist, 2 + p, Math.cos(a) * dist);
       this.s.camera.lookAt(this.alphaPos.x * 0.5, this.alphaPos.y * 0.5, this.alphaPos.z * 0.5);
+      // Slide the link left and down, out from under the right-hand panels.
+      // A portrait screen has no side panels and no width to spare.
+      if (this.s.camera.aspect > 1) {
+        // The panels take a larger share of a narrower landscape screen.
+        const aspect = Math.min(this.s.camera.aspect, 1.78);
+        this.s.camera.translateX(0.73 * aspect + 0.33 * (1.78 - aspect));
+        this.s.camera.translateY(0.5);
+        // The labels project before the next render; without this they use
+        // the camera from before the slide and sit beside their stars.
+        this.s.camera.updateMatrixWorld();
+      }
     } else {
       const q = (p - SCENE_SWITCH) / (1 - SCENE_SWITCH);
-      this.s.camera.position.set(Math.sin(q * 0.8) * 2.5, 0.6, -4 + 4.5 + q * 0.5);
+      // A steady push in, so the ring grows through the scene.
+      this.s.camera.position.set(Math.sin(q * 0.8) * 2.5, 0.6, 1.9 - q * 2.3);
       this.s.camera.lookAt(0, 0, -4);
     }
   }

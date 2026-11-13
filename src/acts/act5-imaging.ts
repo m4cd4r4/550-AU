@@ -16,6 +16,7 @@ import { createLensMaterial } from '../render/lens-shader';
 import { einsteinRingRad, solarAngularRadiusRad } from '../sim/lensing';
 import { auToM, radToArcsec } from '../sim/units';
 import { vec3d, type Vec3d } from '../sim/vec3d';
+import { FinalePanel } from '../ui/finale-panel';
 import { ReconPanel } from '../ui/recon-panel';
 import { J2_EFFECTIVE } from '../spike/spike-controls';
 import type { Act, ActMode, ActServices } from './act';
@@ -23,6 +24,7 @@ import {
   beatAt,
   buildCaptions,
   END_CAPTION,
+  finaleReveal,
   j2On,
   ringFovArcsec,
   scanFraction,
@@ -50,6 +52,7 @@ export class Act5Imaging implements Act {
   private readonly lensQuad: Mesh;
   private readonly cylinder = new CylinderGrid(facts.imageCylinder.proximaBDiameterAt650AUKm);
   private recon: ReconPanel | null = null;
+  private finale: FinalePanel | null = null;
   private readonly captions = buildCaptions();
   private readonly labelAnchors: LabelAnchor[];
 
@@ -95,7 +98,9 @@ export class Act5Imaging implements Act {
       {
         text: `IMAGE CYLINDER ${facts.imageCylinder.proximaBDiameterAt650AUKm} KM`,
         displayPos: vec3d(),
-        accent: true
+        accent: true,
+        align: 'center',
+        dy: -28 // above the rim, clear of the telescopes and the side panels
       },
       { text: 'CORONA REFERENCE', displayPos: vec3d(), accent: false }
     ];
@@ -107,7 +112,10 @@ export class Act5Imaging implements Act {
     this.s.timeline.reset();
     this.s.setBloom(ACT_BLOOM);
     this.s.renderer.domElement.addEventListener('click', this.onClickBound);
-    this.recon = new ReconPanel(this.s.hud.el.parentElement ?? document.body, createExoplanetCanvas());
+    const map = createExoplanetCanvas();
+    this.recon = new ReconPanel(this.s.hud.stack, map);
+    // Straight after the telemetry column: over it, under the captions.
+    this.finale = new FinalePanel(this.s.hud.root, this.s.hud.stack.nextSibling, map);
     this.s.origin.setOrigin(this.anchorDisplay);
     this.lastCaptionT = -1;
     this.endShown = false;
@@ -172,6 +180,7 @@ export class Act5Imaging implements Act {
     const subtracted = this.tourT >= SUBTRACTION_AT_S || this.mode === 'explore';
     this.recon?.setVisible(this.view === 'cylinder' && f > 0);
     this.recon?.draw(f, subtracted, scanMonths(f));
+    this.finale?.setReveal(this.mode === 'tour' ? finaleReveal(this.tourT) : 0);
     this.updateHud(scan.displayCell, scan.displayCells, f);
   }
 
@@ -210,11 +219,14 @@ export class Act5Imaging implements Act {
   private updateCylinderLabels(): void {
     const edge = this.labelAnchors[0];
     if (edge) {
+      // The top of the disc as the camera sees it: screen-up laid into the
+      // disc's plane.
       const r = (facts.imageCylinder.proximaBDiameterAt650AUKm / 2) * KM_TO_SCENE;
-      this.sideV3.crossVectors(this.dirV3, this.s.camera.up).normalize();
-      edge.displayPos.x = this.anchorDisplay.x + this.sideV3.x * r;
-      edge.displayPos.y = this.anchorDisplay.y + this.sideV3.y * r + r * 0.35;
-      edge.displayPos.z = this.anchorDisplay.z + this.sideV3.z * r;
+      this.liftV3.set(0, 1, 0).applyQuaternion(this.s.camera.quaternion);
+      this.liftV3.addScaledVector(this.dirV3, -this.liftV3.dot(this.dirV3)).normalize();
+      edge.displayPos.x = this.anchorDisplay.x + this.liftV3.x * r;
+      edge.displayPos.y = this.anchorDisplay.y + this.liftV3.y * r;
+      edge.displayPos.z = this.anchorDisplay.z + this.liftV3.z * r;
     }
     const reference = this.labelAnchors[1];
     if (reference) {
@@ -262,7 +274,12 @@ export class Act5Imaging implements Act {
     }
     this.s.hud.setRows(rows);
     this.s.ribbon.set({
-      mapLabel: this.view === 'ring' ? 'ANGULAR VIEW' : 'LOCAL FRAME, KM SCALE',
+      mapLabel:
+        this.mode === 'tour' && finaleReveal(this.tourT) >= 0.5
+          ? 'COMPARISON, SCHEMATIC'
+          : this.view === 'ring'
+            ? 'ANGULAR VIEW'
+            : 'LOCAL FRAME, KM SCALE',
       compression: 1,
       trueDistanceAU: Z_AU
     });
@@ -353,6 +370,8 @@ export class Act5Imaging implements Act {
     this.s.setBloom(APP_BLOOM);
     this.recon?.el.remove();
     this.recon = null;
+    this.finale?.el.remove();
+    this.finale = null;
     this.s.labels.setAnchors([]);
     this.s.captions.clear();
     this.s.inspector.hide();

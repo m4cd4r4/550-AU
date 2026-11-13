@@ -8,12 +8,13 @@ import targetsData from '../data/targets.json';
 import { compressedMap, trueMap, type DistanceMap } from '../render/distance-map';
 import { FocalRuler } from '../render/focal-ruler';
 import { equatorialToEclipticDir, eclipticToScene } from '../render/frames';
+import { MotionStreaks } from '../render/motion-streaks';
 import { AU_M, C } from '../sim/constants';
 import { auToM, lightTimeS } from '../sim/units';
 import { scale as scaleVec, vec3d, type Vec3d } from '../sim/vec3d';
 import { formatAu, formatCompression, formatDuration, formatKmFromAu, formatMultipleOfC } from '../ui/format';
 import type { Act, ActMode, ActServices } from './act';
-import { buildCaptionEvents, END_CAPTION, INTRO_CAPTION, TOUR_DURATION_S, tourDistanceAU } from './act2-tour';
+import { buildCaptionEvents, END_CAPTION, INTRO_CAPTION, TOUR_DURATION_S, tourDistanceAU, tourPace } from './act2-tour';
 
 const COMPRESSION_D0_AU = 2;
 
@@ -33,6 +34,9 @@ export class Act2FocalLine implements Act {
   private trueScale = false;
   private mode: ActMode = 'tour';
   private readonly ruler: FocalRuler;
+  // The starfield is at infinity, so the pullback needs its own motion cue.
+  private readonly streaks = new MotionStreaks();
+  private readonly zeroV3 = new Vector3();
   private readonly dir: Vec3d;
   private readonly events = buildCaptionEvents();
   private readonly daysSinceJ2000 = (Date.now() - Date.UTC(2000, 0, 1, 12)) / 86400000;
@@ -60,7 +64,7 @@ export class Act2FocalLine implements Act {
   }
 
   enter(mode: ActMode): void {
-    this.s.scene.add(this.ruler.group);
+    this.s.scene.add(this.ruler.group, this.streaks.object);
     this.s.labels.setAnchors(this.ruler.labelAnchors());
     this.s.setActHeading(`ACT 2 / ${this.title}`, this.question);
     this.s.timeline.reset();
@@ -97,6 +101,7 @@ export class Act2FocalLine implements Act {
       trueR = this.updateTour(dtRealS);
     } else {
       trueR = this.updateExplore();
+      this.streaks.update(dtRealS, this.zeroV3, this.dirV3, 0, 1);
     }
     this.ruler.update(this.s.origin, this.s.camera, this.daysSinceJ2000);
     this.updateHudAndRibbon(trueR);
@@ -160,6 +165,11 @@ export class Act2FocalLine implements Act {
     const lift = Math.min(1, Math.max(0, (p - 0.3) / 0.2));
     this.lookV3.y -= displayR * 0.12 * lift;
     this.s.camera.lookAt(this.lookV3);
+
+    // Streaks stream back past the focus point while the tour is covering
+    // ground, and fade out where it lingers on a milestone.
+    const pace = this.s.timeline.paused || p >= 1 ? 0 : tourPace(p);
+    this.streaks.update(dtRealS, this.zeroV3, this.dirV3, pace, viewDist * 0.75);
     return r;
   }
 
@@ -282,7 +292,7 @@ export class Act2FocalLine implements Act {
   }
 
   exit(): void {
-    this.s.scene.remove(this.ruler.group);
+    this.s.scene.remove(this.ruler.group, this.streaks.object);
     this.s.renderer.domElement.removeEventListener('click', this.onClickBound);
     this.s.labels.setAnchors([]);
     this.s.captions.clear();

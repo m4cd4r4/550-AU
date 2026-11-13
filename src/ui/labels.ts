@@ -21,7 +21,7 @@ export class LabelLayer {
     this.el.innerHTML = '';
     this.items = anchors.map((anchor) => {
       const label = document.createElement('div');
-      label.className = anchor.accent ? 'label accent' : 'label';
+      label.className = `label${anchor.accent ? ' accent' : ''}${anchor.align === 'center' ? ' center' : ''}`;
       label.textContent = anchor.text;
       this.el.appendChild(label);
       return { el: label, anchor };

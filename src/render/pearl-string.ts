@@ -26,7 +26,7 @@ import type { OriginFrame } from './floating-origin';
 import type { LabelAnchor } from './focal-ruler';
 
 const MAX_PEARLS = 40;
-const MIN_ANGULAR = 0.0058; // marker never shrinks below this fraction of distance
+const MIN_ANGULAR = 0.008; // marker never shrinks below this fraction of distance
 
 // Bright phase hues so the craft stand out from the background starfield.
 const PHASE_COLOURS = {

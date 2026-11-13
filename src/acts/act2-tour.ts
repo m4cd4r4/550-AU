@@ -4,7 +4,7 @@
 import facts from '../data/mission-facts.json';
 import { auToM, lightTimeS } from '../sim/units';
 
-export const TOUR_DURATION_S = 90;
+export const TOUR_DURATION_S = 80;
 
 // Story-beat pacing: piecewise log-linear waypoints so the tour lingers at
 // milestones instead of spending equal time per decade. [progress, AU]
@@ -32,6 +32,17 @@ export function tourDistanceAU(progress: number): number {
     return Math.pow(10, Math.log10(prev[1]) + t * (Math.log10(next[1]) - Math.log10(prev[1])));
   }
   return WAYPOINTS[WAYPOINTS.length - 1]?.[1] ?? 700;
+}
+
+// How fast the tour is covering scale at this point, 0 (lingering at a
+// milestone) to 1 (the fastest leg). Drives the motion cue only.
+const FASTEST_DECADES_PER_PROGRESS = 8.2; // the Earth to Neptune leg
+
+export function tourPace(progress: number): number {
+  const step = 0.004;
+  const p = Math.min(1 - step, Math.max(0, progress));
+  const decades = Math.log10(tourDistanceAU(p + step)) - Math.log10(tourDistanceAU(p));
+  return Math.min(1, Math.max(0, decades / step / FASTEST_DECADES_PER_PROGRESS));
 }
 
 export interface CaptionEvent {
