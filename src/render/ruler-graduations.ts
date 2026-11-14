@@ -26,10 +26,11 @@ import { formatAu } from '../ui/format';
 const GRADUATIONS_AU = [1, 2, 5, 10, 20, 50, 100, 300, 400];
 const TICK_SCREEN = 0.012; // half-length as a fraction of camera distance
 const CURSOR_SCREEN = 0.007;
+const TICK_AXIS = new Vector3(1, 0, 0);
 const GREY = 0x8b97a5;
 const ACCENT = 0xffb000;
 
-function smoothstep(a: number, b: number, x: number): number {
+export function smoothstep(a: number, b: number, x: number): number {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
 }
@@ -47,11 +48,13 @@ export class RulerGraduations {
   private readonly cursor: Mesh;
   private readonly cursorAnchor: LabelAnchor;
   private readonly scratch = new Vector3();
+  private readonly side = new Vector3();
+  private readonly axis = new Vector3();
 
   constructor(map: DistanceMap, dir: Vec3d) {
     const d = new Vector3(dir.x, dir.y, dir.z);
-    const side = new Vector3().crossVectors(d, new Vector3(0, 1, 0)).normalize();
-    const geometry = new BufferGeometry().setFromPoints([side.clone().negate(), side]);
+    // Unit tick along local x; update() turns it across the ruler each frame.
+    const geometry = new BufferGeometry().setFromPoints([new Vector3(-1, 0, 0), TICK_AXIS]);
     for (const au of GRADUATIONS_AU) {
       const at = d.clone().multiplyScalar(map.toDisplay(au));
       const material = new LineBasicMaterial({ color: GREY, transparent: true, opacity: 0 });
@@ -87,13 +90,21 @@ export class RulerGraduations {
     viewAU: number,
     focusAU: number | null
   ): void {
+    this.axis.set(dir.x, dir.y, dir.z);
     for (const { au, line, material, anchor } of this.ticks) {
       const a = graduationOpacity(au, viewAU);
       material.opacity = 0.75 * a;
       line.visible = a > 0.01;
       anchor.opacity = 0.85 * a;
+      if (!line.visible) continue;
       this.scratch.copy(line.position).add(groupOffset);
       line.scale.setScalar(this.scratch.distanceTo(camera.position) * TICK_SCREEN);
+      // Across the ruler and across the line of sight, so the tick meets the
+      // ruler at a right angle on screen (as placeLanes() does in Act 7).
+      this.scratch.sub(camera.position);
+      this.side.crossVectors(this.axis, this.scratch);
+      if (this.side.lengthSq() < 1e-12) continue; // looking straight down the ruler
+      line.quaternion.setFromUnitVectors(TICK_AXIS, this.side.normalize());
     }
 
     const on = focusAU !== null;
