@@ -28,7 +28,7 @@ import { mapPosition, type DistanceMap } from './distance-map';
 import { eclipticToScene } from './frames';
 import { planetMesh } from './planet-textures';
 import type { OriginFrame } from './floating-origin';
-import { RulerGraduations } from './ruler-graduations';
+import { RulerGraduations, smoothstep } from './ruler-graduations';
 
 export interface Milestone {
   label: string;
@@ -56,6 +56,13 @@ export interface ClickTarget {
 const GREY = 0x8b97a5;
 const DIM = 0x3d4a5a;
 const ACCENT = 0xffb000;
+
+// Mercury, Venus and Earth sit on the Sun once the view is out past the
+// Kuiper belt, so their names fade between 35 and 55 AU of view.
+const INNER_PLANETS = new Set(['Mercury', 'Venus', 'Earth']);
+export function innerPlanetLabelOpacity(name: string, viewAU: number): number {
+  return INNER_PLANETS.has(name) ? 1 - smoothstep(35, 55, viewAU) : 1;
+}
 
 export class FocalRuler {
   readonly group = new Group();
@@ -131,11 +138,14 @@ export class FocalRuler {
     );
     this.dynamic.add(axis);
 
-    // Perpendicular ticks at every milestone distance
+    // Perpendicular ticks at every milestone distance. Not the planets: their
+    // orbit rings already mark them, and a tick beside the 10 and 20 AU
+    // graduations reads as a doubled "//" (Saturn 9.5, Uranus 19.2).
     const tickPoints: Vector3[] = [];
     const up = new Vector3(0, 1, 0);
     const side = new Vector3().crossVectors(dir, up).normalize();
     for (const m of this.milestones) {
+      if (m.kind === 'planet') continue;
       const at = dir.clone().multiplyScalar(this.map.toDisplay(m.au));
       const len = m.kind === 'lens' ? 0.14 : 0.07;
       tickPoints.push(at.clone().addScaledVector(side, -len), at.clone().addScaledVector(side, len));
@@ -254,7 +264,10 @@ export class FocalRuler {
       mapPosition(this.map, p, p);
       dot.position.set(p.x, p.y, p.z);
       const anchor = this.anchors.find((a) => a.text === planet.name);
-      if (anchor) copy(anchor.displayPos, p);
+      if (anchor) {
+        copy(anchor.displayPos, p);
+        anchor.opacity = innerPlanetLabelOpacity(planet.name, viewAU);
+      }
     }
 
     // Constant screen-size markers
