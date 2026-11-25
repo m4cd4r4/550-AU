@@ -27,7 +27,6 @@ describe('sundiver trajectory anchors', () => {
   it('reaches the 547.8 AU minimum focus around year 20 (19-22 yr)', () => {
     // The published "reaches 650 AU ~year 20" cannot coexist with a 25-26
     // AU/yr exit speed; ~20 yr matches the 547.8 AU minimum focus instead.
-    // See the clarification note appended to docs/BUILD-PROMPT.md.
     const years = traj.timeToAU(facts.lens.minFocalDistanceAU) / YEAR_S;
     expect(years).toBeGreaterThan(19);
     expect(years).toBeLessThan(22);

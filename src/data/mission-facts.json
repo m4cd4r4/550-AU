@@ -1,6 +1,6 @@
 {
   "meta": {
-    "description": "Single source of truth for every number displayed in the app. Built from docs/BUILD-PROMPT.md section 2.",
+    "description": "Single source of truth for every number displayed in the app.",
     "sources": [
       "Turyshev et al 2020, NIAC Phase III report, arXiv:2002.11871",
       "Turyshev and Andersson 2002, arXiv:gr-qc/0205126",

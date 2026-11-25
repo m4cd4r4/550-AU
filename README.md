@@ -167,8 +167,7 @@ Dramatised, and labelled as such in-app:
   tuned effective parameter (recorded in `mission-facts.json`), because the
   published exit speed exceeds what the quoted sail loading gives
   physically. The published timeline figures are quoted as claims; the
-  integrator's own timeline is documented in a clarification appended to
-  `docs/BUILD-PROMPT.md`.
+  integrator's own timeline is checked in `tests/sundiver.test.ts`.
 - **Act 4** compresses the 25 AU pearl spacing for the frame; the ribbon
   declares the compression, and the true spacing is on the HUD. The laser
   pulse cadence and pulse size are visual; the true 13 h transmit and
@@ -206,7 +205,7 @@ Dramatised, and labelled as such in-app:
 
 ## Sources
 
-- AstroKobi, ["NASA's $40 BILLION Plan To Image Alien Worlds"](https://www.youtube.com/watch?v=go-50Dpzs20) - the video that surfaced this mission concept and shaped which facts and story beats to research. No narration was reproduced; all copy in this app is original (see the IP note in `docs/SIM-PLAN.md`)
+- AstroKobi, ["NASA's $40 BILLION Plan To Image Alien Worlds"](https://www.youtube.com/watch?v=go-50Dpzs20) - the video that surfaced this mission concept and shaped which facts and story beats to research. No narration was reproduced; all copy in this app is original
 - Turyshev et al 2020, NIAC Phase III report, [arXiv:2002.11871](https://arxiv.org/abs/2002.11871)
 - Turyshev and Andersson 2002, [arXiv:gr-qc/0205126](https://arxiv.org/abs/gr-qc/0205126)
 - FOCAL mission heritage (Maccone, Eshleman)

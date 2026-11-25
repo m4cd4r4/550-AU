@@ -6,8 +6,8 @@
 // The lightness number beta (SRP acceleration / solar gravity for a face-on
 // sail) is TUNED to reproduce the published exit speed of 25-26 AU/yr from a
 // 0.1 AU perihelion; it is an effective performance parameter, not derived
-// from the sail's mass and area. See the clarification note appended to
-// docs/BUILD-PROMPT.md for how the published timeline figures reconcile.
+// from the sail's mass and area. tests/sundiver.test.ts checks how the
+// published timeline figures reconcile.
 
 import { AU_M, G, M_SUN, YEAR_S } from './constants';
 
