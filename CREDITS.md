@@ -37,7 +37,7 @@ against the primary sources below before use.
 | James Webb Space Telescope (Act 0) | `public/assets/models/jwst.glb` | [nasa/NASA-3D-Resources](https://github.com/nasa/NASA-3D-Resources/tree/master/3D%20Models/James%20Webb%20Space%20Telescope%20(B)) - "James Webb Space Telescope (B)", glTF 2.0 with Draco compression | Public domain (NASA). A procedural JWST is kept as an offline fallback |
 | Draco decoder | `public/assets/draco/` | Bundled from [three.js](https://github.com/mrdoob/three.js) (`examples/jsm/libs/draco/gltf`) so the model decodes offline | Apache-2.0 (Draco) |
 
-## Planned for later slices (per docs/BUILD-PROMPT.md section 6)
+## Planned for later slices
 
 - NASA SVS Deep Star Maps 2020 sky texture (public domain)
 - NASA Blue Marble Earth (public domain)
